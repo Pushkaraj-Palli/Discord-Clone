@@ -9,6 +9,13 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  env: {
+    JWT_SECRET: process.env.JWT_SECRET,
+  },
+  experimental: {
+    serverActions: true,
+    serverComponentsExternalPackages: [],
+  },
 }
 
 export default nextConfig

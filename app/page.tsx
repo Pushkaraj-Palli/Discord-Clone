@@ -1,3 +1,8 @@
+'use client'
+
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { getCookie } from "cookies-next"
 import { Suspense } from "react"
 import ServerList from "@/components/server-list"
 import ChannelSidebar from "@/components/channel-sidebar"
@@ -7,6 +12,15 @@ import UserPanel from "@/components/user-panel"
 import LoadingSpinner from "@/components/loading-spinner"
 
 export default function HomePage() {
+  const router = useRouter()
+
+  useEffect(() => {
+    const token = getCookie('auth_token')
+    if (!token) {
+      router.push('/login')
+    }
+  }, [router])
+
   return (
     <div className="flex h-screen bg-gray-800">
       {/* Server List */}
