@@ -28,7 +28,14 @@ export async function GET() {
 
   try {
     // Try a direct connection to MongoDB
-    const uri = process.env.MONGODB_URI || "mongodb+srv://2005pushkarajpalli:ii0UGD0JTAJg8SVV@cluster0.asuwnfx.mongodb.net/discord_clone?retryWrites=true&w=majority&appName=Cluster0";
+    const uri = process.env.MONGODB_URI;
+
+    if (!uri) {
+      result.status = "error";
+      result.message = "MONGODB_URI is not defined in environment variables.";
+      result.error = { name: "Configuration Error", message: "MONGODB_URI environment variable is missing." };
+      return NextResponse.json(result);
+    }
     
     console.log("Mongo test: Attempting direct connection...");
     

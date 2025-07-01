@@ -17,7 +17,13 @@ const rl = readline.createInterface({
 });
 
 // MongoDB connection string
-const defaultUri = "mongodb+srv://2005pushkarajpalli:ii0UGD0JTAJg8SVV@cluster0.asuwnfx.mongodb.net/discord_clone?retryWrites=true&w=majority&appName=Cluster0";
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  console.error("❌ Error: MONGODB_URI environment variable is not set.");
+  console.error("Please create a .env.local file in your project root with MONGODB_URI=your_mongodb_connection_string");
+  process.exit(1);
+}
 
 console.log("🔧 MongoDB Connection Fixer 🔧");
 console.log("==============================");
@@ -28,7 +34,7 @@ async function checkMongoDB() {
   
   try {
     // Try to connect with the default URI
-    await mongoose.connect(defaultUri, {
+    await mongoose.connect(MONGODB_URI, {
       connectTimeoutMS: 10000,
       socketTimeoutMS: 10000,
       serverSelectionTimeoutMS: 10000,
@@ -100,7 +106,7 @@ async function fixEnvFile() {
   const envPath = path.join(process.cwd(), '.env.local');
   const jwtSecret = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
   
-  const envContent = `MONGODB_URI=${defaultUri}\nJWT_SECRET=${jwtSecret}\n`;
+  const envContent = `MONGODB_URI=${MONGODB_URI}\nJWT_SECRET=${jwtSecret}\n`;
   
   try {
     fs.writeFileSync(envPath, envContent);
@@ -116,7 +122,7 @@ async function checkNetworkConnectivity() {
   console.log("\n4️⃣ Checking network connectivity to MongoDB Atlas...");
   
   // Extract host from connection string
-  const hostMatch = defaultUri.match(/mongodb\+srv:\/\/[^@]+@([^\/]+)/);
+  const hostMatch = MONGODB_URI.match(/mongodb\+srv:\/\/[^@]+@([^\/]+)/);
   const host = hostMatch ? hostMatch[1] : 'cluster0.asuwnfx.mongodb.net';
   
   console.log(`Testing connectivity to: ${host}`);

@@ -2,8 +2,7 @@
 const mongoose = require('mongoose');
 
 // MongoDB connection string - replace with your actual connection string
-const connectionString = process.argv[2] || 
-  "mongodb+srv://2005pushkarajpalli:ii0UGD0JTAJg8SVV@cluster0.asuwnfx.mongodb.net/discord_clone?retryWrites=true&w=majority&appName=Cluster0";
+const connectionString = process.argv[2] || process.env.MONGODB_URI;
 
 // Hide the password when logging
 const sanitizedUri = connectionString.replace(/mongodb(\+srv)?:\/\/([^:]+):[^@]+@/, "mongodb$1://$2:****@");
