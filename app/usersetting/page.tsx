@@ -1,14 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetClose,
-} from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { X, Loader2 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
@@ -22,11 +14,8 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useRouter } from 'next/navigation';
 
-interface SettingsSidebarProps {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-}
 
 interface UserData {
   id: string;
@@ -39,11 +28,12 @@ interface UserData {
   createdAt: string;
 }
 
-export default function SettingsSidebar({ isOpen, onOpenChange }: SettingsSidebarProps) {
+export default function UserSettingsPage() {
   const [activeSection, setActiveSection] = useState<string>("my-account");
   const [userData, setUserData] = useState<UserData | null>(null);
   const [showEmail, setShowEmail] = useState(false);
   const { toast } = useToast();
+  const router = useRouter();
 
   // State for edit modals
   const [isDisplayNameEditOpen, setIsDisplayNameEditOpen] = useState(false);
@@ -90,10 +80,8 @@ export default function SettingsSidebar({ isOpen, onOpenChange }: SettingsSideba
   };
 
   useEffect(() => {
-    if (isOpen) {
-      fetchUserData();
-    }
-  }, [isOpen]);
+    fetchUserData();
+  }, []);
 
   const handleUpdateUser = async (field: keyof UserData, value: string) => {
     setIsEditing(true);
@@ -191,14 +179,12 @@ export default function SettingsSidebar({ isOpen, onOpenChange }: SettingsSideba
     switch (activeSection) {
       case "my-account":
         return (
-          <div className="flex flex-col">
+          <div className="flex-1 flex flex-col">
             <div className="flex justify-between items-center mb-6 w-full">
               <h1 className="text-2xl font-bold text-white">My Account</h1>
-              <SheetClose asChild>
-                <Button variant="ghost" size="icon" className="w-8 h-8 text-gray-400 hover:text-white">
+              <Button variant="ghost" size="icon" className="w-8 h-8 text-gray-400 hover:text-white" onClick={() => router.back()}>
                   <X className="h-5 w-5" />
                 </Button>
-              </SheetClose>
             </div>
 
             {/* Security and Standing Tabs */}
@@ -355,11 +341,9 @@ export default function SettingsSidebar({ isOpen, onOpenChange }: SettingsSideba
           <div className="flex-1 flex flex-col p-8 overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h1 className="text-2xl font-bold text-white">Profiles</h1>
-              <SheetClose asChild>
-                <Button variant="ghost" size="icon" className="w-8 h-8 text-gray-400 hover:text-white">
+              <Button variant="ghost" size="icon" className="w-8 h-8 text-gray-400 hover:text-white" onClick={() => router.back()}>
                   <X className="h-5 w-5" />
                 </Button>
-              </SheetClose>
             </div>
 
             {/* User Profile Section for Profiles */}
@@ -401,73 +385,69 @@ export default function SettingsSidebar({ isOpen, onOpenChange }: SettingsSideba
   };
 
   return (
-    <>
-      <Sheet open={isOpen} onOpenChange={onOpenChange}>
-        <SheetContent side="left" className="w-full bg-gray-700 text-white p-0 flex">
-          {/* Left Navigation (240px width) */}
-          <div className="w-60 bg-gray-800 flex flex-col p-4 border-r border-gray-900">
-            <div className="mb-6">
-              <div className="relative mb-4">
-                <input
-                  type="text"
-                  placeholder="Search"
-                  className="w-full p-2 pl-8 bg-gray-900 rounded text-sm text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-                {/* Search icon */}
-                <svg className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
-              </div>
-
-              <p className="text-xs text-gray-400 font-semibold uppercase mb-2">USER SETTINGS</p>
-              <Button
-                variant="ghost"
-                className={`w-full justify-start text-sm ${activeSection === "my-account" ? "bg-gray-600 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-white"}`}
-                onClick={() => setActiveSection("my-account")}
-              >
-                My Account
-              </Button>
-              <Button
-                variant="ghost"
-                className={`w-full justify-start text-sm ${activeSection === "profiles" ? "bg-gray-600 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-white"}`}
-                onClick={() => setActiveSection("profiles")}
-              >
-                Profiles
-              </Button>
-              <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Content & Social</Button>
-              <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Data & Privacy</Button>
-              <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Family Centre</Button>
-              <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Authorised Apps</Button>
-              <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Devices</Button>
-              <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white flex items-center">Connections <span className="ml-2 text-[10px] bg-red-500 text-white px-1 py-0.5 rounded">NEW</span></Button>
-              <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Clips</Button>
-            </div>
-
-            <div className="mb-6">
-              <p className="text-xs text-gray-400 font-semibold uppercase mb-2">PAYMENT SETTINGS</p>
-              <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Nitro</Button>
-              <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Server Boost</Button>
-              <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Subscriptions</Button>
-              <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Gift Inventory</Button>
-              <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Billing</Button>
-            </div>
-
-            <div>
-              <p className="text-xs text-gray-400 font-semibold uppercase mb-2">APP SETTINGS</p>
-              <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Appearance</Button>
-              <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Accessibility</Button>
-              <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Voice & Video</Button>
-              <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Chat</Button>
-              <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Notifications</Button>
-            </div>
+    <div className="flex h-screen bg-gray-800 text-white">
+      {/* Left Navigation (240px width) */}
+      <div className="w-60 bg-gray-800 flex flex-col p-4 border-r border-gray-900">
+        <div className="mb-6">
+          <div className="relative mb-4">
+            <input
+              type="text"
+              placeholder="Search"
+              className="w-full p-2 pl-8 bg-gray-900 rounded text-sm text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+            {/* Search icon */}
+            <svg className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
           </div>
 
-          {/* Right Content */}
-          <div className="flex-1 flex flex-col p-8 overflow-y-auto">
-            {renderContent()}
-          </div>
-        </SheetContent>
-      </Sheet>
+          <p className="text-xs text-gray-400 font-semibold uppercase mb-2">USER SETTINGS</p>
+          <Button
+            variant="ghost"
+            className={`w-full justify-start text-sm ${activeSection === "my-account" ? "bg-gray-600 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-white"}`}
+            onClick={() => setActiveSection("my-account")}
+          >
+            My Account
+          </Button>
+          <Button
+            variant="ghost"
+            className={`w-full justify-start text-sm ${activeSection === "profiles" ? "bg-gray-600 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-white"}`}
+            onClick={() => setActiveSection("profiles")}
+          >
+            Profiles
+          </Button>
+          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Content & Social</Button>
+          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Data & Privacy</Button>
+          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Family Centre</Button>
+          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Authorised Apps</Button>
+          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Devices</Button>
+          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white flex items-center">Connections <span className="ml-2 text-[10px] bg-red-500 text-white px-1 py-0.5 rounded">NEW</span></Button>
+          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Clips</Button>
+        </div>
+
+        <div className="mb-6">
+          <p className="text-xs text-gray-400 font-semibold uppercase mb-2">PAYMENT SETTINGS</p>
+          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Nitro</Button>
+          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Server Boost</Button>
+          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Subscriptions</Button>
+          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Gift Inventory</Button>
+          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Billing</Button>
+        </div>
+
+        <div>
+          <p className="text-xs text-gray-400 font-semibold uppercase mb-2">APP SETTINGS</p>
+          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Appearance</Button>
+          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Accessibility</Button>
+          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Voice & Video</Button>
+          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Chat</Button>
+          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Notifications</Button>
+        </div>
+      </div>
+
+      {/* Right Content */} 
+      <div className="flex-1 flex flex-col p-8 overflow-y-auto">
+        {renderContent()}
+      </div>
 
       {/* Edit Display Name Dialog */}
       <Dialog open={isDisplayNameEditOpen} onOpenChange={setIsDisplayNameEditOpen}>
@@ -489,9 +469,9 @@ export default function SettingsSidebar({ isOpen, onOpenChange }: SettingsSideba
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setIsDisplayNameEditOpen(false)}>Cancel</Button>
-            <Button
-              type="submit"
-              onClick={() => handleUpdateUser('displayName', newDisplayName)}
+            <Button 
+              type="submit" 
+              onClick={() => handleUpdateUser('displayName', newDisplayName)} 
               disabled={isEditing || !newDisplayName.trim()}
             >
               {isEditing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Save Changes
@@ -520,9 +500,9 @@ export default function SettingsSidebar({ isOpen, onOpenChange }: SettingsSideba
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setIsUsernameEditOpen(false)}>Cancel</Button>
-            <Button
-              type="submit"
-              onClick={() => handleUpdateUser('username', newUsername)}
+            <Button 
+              type="submit" 
+              onClick={() => handleUpdateUser('username', newUsername)} 
               disabled={isEditing || !newUsername.trim()}
             >
               {isEditing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Save Changes
@@ -552,9 +532,9 @@ export default function SettingsSidebar({ isOpen, onOpenChange }: SettingsSideba
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setIsEmailEditOpen(false)}>Cancel</Button>
-            <Button
-              type="submit"
-              onClick={() => handleUpdateUser('email', newEmail)}
+            <Button 
+              type="submit" 
+              onClick={() => handleUpdateUser('email', newEmail)} 
               disabled={isEditing || !newEmail.trim()}
             >
               {isEditing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Save Changes
@@ -584,9 +564,9 @@ export default function SettingsSidebar({ isOpen, onOpenChange }: SettingsSideba
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setIsPhoneNumberEditOpen(false)}>Cancel</Button>
-            <Button
-              type="submit"
-              onClick={() => handleUpdateUser('phoneNumber', newPhoneNumber)}
+            <Button 
+              type="submit" 
+              onClick={() => handleUpdateUser('phoneNumber', newPhoneNumber)} 
               disabled={isEditing || !newPhoneNumber.trim()}
             >
               {isEditing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Save Changes
@@ -636,9 +616,9 @@ export default function SettingsSidebar({ isOpen, onOpenChange }: SettingsSideba
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setIsPasswordChangeOpen(false)}>Cancel</Button>
-            <Button
-              type="submit"
-              onClick={handleChangePassword}
+            <Button 
+              type="submit" 
+              onClick={handleChangePassword} 
               disabled={isEditing || !currentPassword || !newPassword || newPassword !== confirmNewPassword}
             >
               {isEditing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Change Password
@@ -646,6 +626,6 @@ export default function SettingsSidebar({ isOpen, onOpenChange }: SettingsSideba
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 } 

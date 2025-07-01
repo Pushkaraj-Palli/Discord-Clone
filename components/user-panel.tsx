@@ -4,13 +4,14 @@ import { useState } from "react"
 import { Mic, MicOff, Headphones, HeadphonesIcon, Settings, PhoneOff } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import SettingsSidebar from "@/components/settings-sidebar"
+import { useRouter } from 'next/navigation';
 
 export default function UserPanel() {
   const [isMuted, setIsMuted] = useState(false)
   const [isDeafened, setIsDeafened] = useState(false)
   const [isInCall, setIsInCall] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const router = useRouter();
 
   const currentUser = {
     name: "YourUsername",
@@ -80,12 +81,11 @@ export default function UserPanel() {
           variant="ghost"
           size="icon"
           className="w-8 h-8 text-gray-400 hover:text-white hover:bg-gray-700 discord-button"
-          onClick={() => setIsSettingsOpen(true)}
+          onClick={() => router.push('/usersetting')}
         >
           <Settings className="w-4 h-4" />
         </Button>
       </div>
-      <SettingsSidebar isOpen={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
     </div>
   )
 }
