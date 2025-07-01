@@ -19,7 +19,7 @@ const voiceChannels = [
   { id: "4", name: "Study Room", users: 2, userLimit: 4 },
 ]
 
-export default function ChannelSidebar() {
+export default function ChannelSidebar({ serverId }: { serverId: string }) {
   const [textExpanded, setTextExpanded] = useState(true)
   const [voiceExpanded, setVoiceExpanded] = useState(true)
 
@@ -27,7 +27,7 @@ export default function ChannelSidebar() {
     <div className="flex-1 flex flex-col bg-gray-800">
       {/* Server Header */}
       <div className="h-12 px-4 flex items-center justify-between border-b border-gray-900/50 shadow-lg bg-gray-800 relative">
-        <h1 className="font-semibold text-white text-base">General Server</h1>
+        <h1 className="font-semibold text-white text-base">Server: {serverId}</h1>
         <div className="flex items-center space-x-1">
           <Button variant="ghost" size="icon" className="w-6 h-6 text-gray-400 hover:text-white">
             <Bell className="w-4 h-4" />

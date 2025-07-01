@@ -1,0 +1,57 @@
+'use client'
+
+import { useEffect, use as useReact } from "react"
+import { useRouter } from "next/navigation"
+import { getCookie } from "cookies-next"
+import { Suspense } from "react"
+import ServerList from "@/components/server-list"
+import ChannelSidebar from "@/components/channel-sidebar"
+import ChatArea from "@/components/chat-area"
+import UserList from "@/components/user-list"
+import UserPanel from "@/components/user-panel"
+import LoadingSpinner from "@/components/loading-spinner"
+
+export default function ServerPage({ params }: { params: { serverId: string } }) {
+  const unwrappedParams = useReact(params as PromiseLike<{ serverId: string }>);
+  const router = useRouter()
+
+  useEffect(() => {
+    const token = getCookie('auth_token')
+    if (!token) {
+      router.push('/login')
+    }
+  }, [router])
+
+  return (
+    <div className="flex h-screen bg-gray-800">
+      {/* Server List */}
+      <div className="w-[72px] bg-gray-900 flex flex-col">
+        <Suspense fallback={<LoadingSpinner />}>
+          <ServerList />
+        </Suspense>
+      </div>
+
+      {/* Channel Sidebar */}
+      <div className="w-60 bg-gray-800 flex flex-col">
+        <Suspense fallback={<LoadingSpinner />}>
+          <ChannelSidebar serverId={unwrappedParams.serverId} />
+        </Suspense>
+        <UserPanel />
+      </div>
+
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col">
+        <Suspense fallback={<LoadingSpinner />}>
+          <ChatArea serverId={unwrappedParams.serverId} />
+        </Suspense>
+      </div>
+
+      {/* User List - Hidden on mobile */}
+      <div className="w-60 bg-gray-800 hidden lg:block">
+        <Suspense fallback={<LoadingSpinner />}>
+          <UserList serverId={unwrappedParams.serverId} />
+        </Suspense>
+      </div>
+    </div>
+  )
+} 

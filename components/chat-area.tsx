@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input"
 import MessageList from "@/components/message-list"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
-export default function ChatArea() {
+export default function ChatArea({ serverId }: { serverId: string }) {
   const [message, setMessage] = useState("")
   const [isTyping, setIsTyping] = useState(false)
 
@@ -44,7 +44,7 @@ export default function ChatArea() {
       <div className="h-12 px-4 flex items-center justify-between border-b border-gray-900/50 shadow-lg bg-gray-800 relative">
         <div className="flex items-center">
           <Hash className="w-5 h-5 text-gray-400 mr-2" />
-          <span className="font-semibold text-white text-base">general</span>
+          <span className="font-semibold text-white text-base">Server: {serverId} - general</span>
           <div className="ml-2 h-4 w-px bg-gray-600" />
           <span className="ml-2 text-sm text-gray-400">General discussion for everyone</span>
         </div>
