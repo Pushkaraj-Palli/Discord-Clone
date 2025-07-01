@@ -61,11 +61,11 @@ const getStatusColor = (status: string) => {
   }
 }
 
-export default function UserList({ serverId }: { serverId: string }) {
+export default function UserList({ serverName }: { serverName: string }) {
   return (
     <div className="flex flex-col h-full p-4">
       <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">
-        Online for Server: {serverId} — {onlineUsers.length}
+        Online for {serverName} — {onlineUsers.length}
       </h3>
 
       <div className="space-y-2 mb-6">

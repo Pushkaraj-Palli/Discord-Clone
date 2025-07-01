@@ -26,6 +26,8 @@ export async function POST(req: NextRequest) {
       icon: icon || null,
       owner: userId,
       members: [userId],
+      textChannels: [{ name: 'general' }],
+      voiceChannels: [{ name: 'General' }],
     });
 
     return NextResponse.json(newServer, { status: 201 });

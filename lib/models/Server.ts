@@ -21,6 +21,18 @@ const ServerSchema = new Schema({
       ref: 'User',
     },
   ],
+  textChannels: [
+    {
+      name: { type: String, required: true },
+      // Add other properties if needed, e.g., messages: [{ type: Schema.Types.ObjectId, ref: 'Message' }]
+    },
+  ],
+  voiceChannels: [
+    {
+      name: { type: String, required: true },
+      // Add other properties if needed, e.g., usersConnected: [{ type: Schema.Types.ObjectId, ref: 'User' }]
+    },
+  ],
 }, {
   timestamps: true,
 });

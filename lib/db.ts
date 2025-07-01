@@ -1,7 +1,14 @@
-import mongoose from 'mongoose';
+import mongoose, { Mongoose } from 'mongoose';
 
-// Format the connection string without using srv format
-// Use direct cluster connection instead of DNS SRV lookup which might be blocked
+interface MongooseCache {
+  conn: Mongoose | null;
+  promise: Promise<Mongoose> | null;
+}
+
+declare global {
+  var mongoose: MongooseCache | undefined; // eslint-disable-line no-var
+}
+
 const getMongoUri = () => {
   const uri = process.env.MONGODB_URI || "mongodb+srv://2005pushkarajpalli:ii0UGD0JTAJg8SVV@cluster0.asuwnfx.mongodb.net/discord_clone?retryWrites=true&w=majority&appName=Cluster0";
   return uri;
@@ -13,15 +20,13 @@ console.log("MongoDB connection string format:",
   MONGODB_URI.replace(/mongodb(\+srv)?:\/\/([^:]+):[^@]+@/, "mongodb$1://$2:****@")
 );
 
-// Define mongoose global type
-interface MongooseCache {
-  conn: typeof mongoose | null;
-  promise: Promise<typeof mongoose> | null;
+// Initialize the global Mongoose cache if it doesn't exist
+if (!global.mongoose) {
+  global.mongoose = { conn: null, promise: null };
 }
 
-let cached: MongooseCache = global as unknown as { mongoose: MongooseCache } 
-  ? (global as unknown as { mongoose: MongooseCache }).mongoose 
-  : { conn: null, promise: null };
+// Use the globally cached object
+let cached = global.mongoose;
 
 if (!cached.promise) {
   cached.promise = mongoose.connect(MONGODB_URI, {
