@@ -4,6 +4,8 @@ export interface IUser {
   email: string;
   username: string;
   password: string;
+  displayName?: string;
+  phoneNumber?: string;
   avatarUrl?: string;
   status?: 'online' | 'offline' | 'idle' | 'dnd';
   createdAt: Date;
@@ -29,6 +31,16 @@ const userSchema = new Schema<IUser>(
     password: {
       type: String,
       required: [true, "Password is required"],
+    },
+    displayName: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    phoneNumber: {
+      type: String,
+      trim: true,
+      default: null,
     },
     avatarUrl: {
       type: String,
