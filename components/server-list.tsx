@@ -72,7 +72,7 @@ export default function ServerList() {
               } transition-all duration-200 flex items-center justify-center cursor-pointer server-icon relative overflow-hidden`}
             >
               {server.icon ? (
-                <img src={server.icon} alt={server.name} className="w-full h-full object-cover rounded-2xl group-hover:rounded-xl" />
+                <img src={server.icon.replace(/%22$/, '').replace(/"$/, '')} alt={server.name} className="w-full h-full object-cover rounded-2xl group-hover:rounded-xl" />
               ) : (
                 <span className="text-xl relative z-10">{server.name.charAt(0)}</span>
               )}

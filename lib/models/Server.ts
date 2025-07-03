@@ -19,7 +19,7 @@ const InvitationSchema = new Schema({
     type: Date,
     default: Date.now,
   },
-}, { _id: false }); // Ensure subdocument does not get its own _id
+});
 
 const ServerSchema = new Schema({
   name: {

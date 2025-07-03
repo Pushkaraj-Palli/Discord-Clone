@@ -6,7 +6,8 @@ import connectToDatabase from '@/lib/db';
 export async function POST(req: NextRequest) {
   try {
     await connectToDatabase();
-    const token = req.cookies.get('token')?.value;
+    const authHeader = req.headers.get('authorization');
+    const token = authHeader?.split(' ')[1]; // Get token from Authorization header
 
     if (!token) {
       return new NextResponse("Unauthorized", { status: 401 });
@@ -15,6 +16,7 @@ export async function POST(req: NextRequest) {
     let session;
     try {
       session = await verifyToken(token);
+      console.log('JWT Session Payload (decline-invite):', session);
     } catch (error) {
       return new NextResponse("Unauthorized: Invalid token", { status: 401 });
     }

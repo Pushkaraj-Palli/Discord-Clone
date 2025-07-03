@@ -44,6 +44,8 @@ export async function GET(req: NextRequest) {
       }));
     }).flat(); // Flatten the array of arrays
 
+    console.log('Formatted Invitations Sent to Client:', formattedInvitations);
+
     return NextResponse.json({ invitations: formattedInvitations }, { status: 200 });
   } catch (error) {
     console.error("Error fetching invitations:", error);

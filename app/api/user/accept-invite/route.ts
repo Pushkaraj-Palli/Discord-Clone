@@ -7,7 +7,8 @@ import connectToDatabase from '@/lib/db';
 export async function POST(req: NextRequest) {
   try {
     await connectToDatabase();
-    const token = req.cookies.get('token')?.value;
+    const authHeader = req.headers.get('authorization');
+    const token = authHeader?.split(' ')[1]; // Get token from Authorization header
 
     if (!token) {
       return new NextResponse("Unauthorized", { status: 401 });
@@ -16,6 +17,7 @@ export async function POST(req: NextRequest) {
     let session;
     try {
       session = await verifyToken(token);
+      console.log('JWT Session Payload (accept-invite):', session);
     } catch (error) {
       return new NextResponse("Unauthorized: Invalid token", { status: 401 });
     }
@@ -24,7 +26,9 @@ export async function POST(req: NextRequest) {
       return new NextResponse("Unauthorized: User ID not found in token", { status: 401 });
     }
 
-    const { serverId, invitationId } = await req.json();
+    const requestBody = await req.json();
+    console.log('Accept Invitation Request Body:', requestBody);
+    const { serverId, invitationId } = requestBody;
 
     if (!serverId || !invitationId) {
       return new NextResponse("Server ID and Invitation ID are required", { status: 400 });

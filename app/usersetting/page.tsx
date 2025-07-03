@@ -140,10 +140,19 @@ export default function UserSettingsPage() {
         });
         fetchInvitations(); // Refresh invitations list
       } else {
-        const errorData = await response.json();
+        let errorMessage = "Failed to accept invitation.";
+        const contentType = response.headers.get("content-type");
+
+        if (contentType && contentType.includes("application/json")) {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } else {
+          errorMessage = await response.text();
+        }
+
         toast({
           title: "Error",
-          description: errorData.message || "Failed to accept invitation.",
+          description: errorMessage,
           variant: "destructive",
         });
       }
@@ -175,10 +184,19 @@ export default function UserSettingsPage() {
         });
         fetchInvitations(); // Refresh invitations list
       } else {
-        const errorData = await response.json();
+        let errorMessage = "Failed to decline invitation.";
+        const contentType = response.headers.get("content-type");
+
+        if (contentType && contentType.includes("application/json")) {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } else {
+          errorMessage = await response.text();
+        }
+
         toast({
           title: "Error",
-          description: errorData.message || "Failed to decline invitation.",
+          description: errorMessage,
           variant: "destructive",
         });
       }
@@ -515,9 +533,9 @@ export default function UserSettingsPage() {
             ) : invitations.length > 0 ? (
               <div className="space-y-4">
                 {invitations.map((invitation) => (
-                  <div key={invitation.invitationId} className="bg-gray-900 rounded-lg p-4 flex items-center justify-between">
+                  <div key={invitation.invitationId || invitation.serverName + invitation.createdAt} className="bg-gray-900 rounded-lg p-4 flex items-center justify-between">
                     <div>
-                      <p className="text-white font-semibold">Invitation to {invitation.serverName}</p>
+                      <p className="text-white font-semibold">Invitation to {invitation.serverName} Server</p>
                       <p className="text-gray-400 text-sm">Invited by: {invitation.invitedBy || 'Unknown'}</p>
                       <p className="text-gray-500 text-xs">{new Date(invitation.createdAt).toLocaleDateString()}</p>
                     </div>
