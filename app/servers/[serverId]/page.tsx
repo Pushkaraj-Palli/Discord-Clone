@@ -9,7 +9,7 @@ import LoadingSpinner from "@/components/loading-spinner"
 import { cookies } from 'next/headers';
 
 async function getServerDetails(serverId: string) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/servers/${serverId}`, {
     headers: {
       'Cookie': cookieStore.toString(),
@@ -27,7 +27,8 @@ async function getServerDetails(serverId: string) {
 }
 
 export default async function ServerPage({ params }: { params: { serverId: string } }) {
-  const { serverId } = params; // params is implicitly awaited here if async function
+  const awaitedParams = await Promise.resolve(params);
+  const { serverId } = awaitedParams;
   const server = await getServerDetails(serverId);
 
   return (

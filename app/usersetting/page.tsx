@@ -49,6 +49,8 @@ export default function UserSettingsPage() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [invitations, setInvitations] = useState<any[]>([]);
+  const [loadingInvitations, setLoadingInvitations] = useState(false);
 
   const fetchUserData = async () => {
     try {
@@ -79,9 +81,126 @@ export default function UserSettingsPage() {
     }
   };
 
+  const fetchInvitations = async () => {
+    setLoadingInvitations(true);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/user/invitations`, {
+        headers: {
+          'Authorization': `Bearer ${document.cookie.split('; ').find(row => row.startsWith('auth_token='))?.split('=')[1]}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setInvitations(data.invitations);
+      } else {
+        let errorMessage = "Failed to fetch invitations.";
+        const contentType = response.headers.get("content-type");
+
+        if (contentType && contentType.includes("application/json")) {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } else {
+          errorMessage = await response.text();
+        }
+
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching invitations:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while fetching invitations.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingInvitations(false);
+    }
+  };
+
+  const handleAcceptInvitation = async (serverId: string, invitationId: string) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/user/accept-invite`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          'Authorization': `Bearer ${document.cookie.split('; ').find(row => row.startsWith('auth_token='))?.split('=')[1]}`,
+        },
+        body: JSON.stringify({ serverId, invitationId }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Invitation accepted successfully.",
+        });
+        fetchInvitations(); // Refresh invitations list
+      } else {
+        const errorData = await response.json();
+        toast({
+          title: "Error",
+          description: errorData.message || "Failed to accept invitation.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error accepting invitation:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeclineInvitation = async (serverId: string, invitationId: string) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/user/decline-invite`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          'Authorization': `Bearer ${document.cookie.split('; ').find(row => row.startsWith('auth_token='))?.split('=')[1]}`,
+        },
+        body: JSON.stringify({ serverId, invitationId }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Invitation declined successfully.",
+        });
+        fetchInvitations(); // Refresh invitations list
+      } else {
+        const errorData = await response.json();
+        toast({
+          title: "Error",
+          description: errorData.message || "Failed to decline invitation.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error declining invitation:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     fetchUserData();
   }, []);
+
+  useEffect(() => {
+    if (activeSection === "invitations") {
+      fetchInvitations();
+    }
+  }, [activeSection]);
 
   const handleUpdateUser = async (field: keyof UserData, value: string) => {
     setIsEditing(true);
@@ -379,6 +498,54 @@ export default function UserSettingsPage() {
             <p className="text-gray-400">This section will contain more detailed profile settings and customization options.</p>
           </div>
         );
+      case "invitations":
+        return (
+          <div className="flex-1 flex flex-col p-8 overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-2xl font-bold text-white">Invitations</h1>
+              <Button variant="ghost" size="icon" className="w-8 h-8 text-gray-400 hover:text-white" onClick={() => router.back()}>
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            <p className="text-gray-400">This section will display your server invitations.</p>
+            {loadingInvitations ? (
+              <div className="flex justify-center items-center h-48">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+              </div>
+            ) : invitations.length > 0 ? (
+              <div className="space-y-4">
+                {invitations.map((invitation) => (
+                  <div key={invitation.invitationId} className="bg-gray-900 rounded-lg p-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-white font-semibold">Invitation to {invitation.serverName}</p>
+                      <p className="text-gray-400 text-sm">Invited by: {invitation.invitedBy || 'Unknown'}</p>
+                      <p className="text-gray-500 text-xs">{new Date(invitation.createdAt).toLocaleDateString()}</p>
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => handleAcceptInvitation(invitation.serverId, invitation.invitationId)}
+                      >
+                        Accept
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-red-400 border-red-400 hover:bg-red-900"
+                        onClick={() => handleDeclineInvitation(invitation.serverId, invitation.invitationId)}
+                      >
+                        Decline
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500">No pending invitations.</p>
+            )}
+          </div>
+        );
       default:
         return null;
     }
@@ -401,46 +568,29 @@ export default function UserSettingsPage() {
             </svg>
           </div>
 
-          <p className="text-xs text-gray-400 font-semibold uppercase mb-2">USER SETTINGS</p>
+          <h2 className="text-sm font-semibold text-gray-400 mb-2">USER SETTINGS</h2>
           <Button
             variant="ghost"
-            className={`w-full justify-start text-sm ${activeSection === "my-account" ? "bg-gray-600 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-white"}`}
+            className={`w-full justify-start text-left px-2 py-1.5 h-auto rounded ${activeSection === "my-account" ? "bg-gray-700 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-white"}`}
             onClick={() => setActiveSection("my-account")}
           >
             My Account
           </Button>
           <Button
             variant="ghost"
-            className={`w-full justify-start text-sm ${activeSection === "profiles" ? "bg-gray-600 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-white"}`}
+            className={`w-full justify-start text-left px-2 py-1.5 h-auto rounded ${activeSection === "profiles" ? "bg-gray-700 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-white"}`}
             onClick={() => setActiveSection("profiles")}
           >
             Profiles
           </Button>
-          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Content & Social</Button>
-          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Data & Privacy</Button>
-          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Family Centre</Button>
-          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Authorised Apps</Button>
-          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Devices</Button>
-          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white flex items-center">Connections <span className="ml-2 text-[10px] bg-red-500 text-white px-1 py-0.5 rounded">NEW</span></Button>
-          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Clips</Button>
-        </div>
-
-        <div className="mb-6">
-          <p className="text-xs text-gray-400 font-semibold uppercase mb-2">PAYMENT SETTINGS</p>
-          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Nitro</Button>
-          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Server Boost</Button>
-          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Subscriptions</Button>
-          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Gift Inventory</Button>
-          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Billing</Button>
-        </div>
-
-        <div>
-          <p className="text-xs text-gray-400 font-semibold uppercase mb-2">APP SETTINGS</p>
-          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Appearance</Button>
-          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Accessibility</Button>
-          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Voice & Video</Button>
-          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Chat</Button>
-          <Button variant="ghost" className="w-full justify-start text-sm text-gray-300 hover:bg-gray-700 hover:text-white">Notifications</Button>
+          {/* New Invitations Button */}
+          <Button
+            variant="ghost"
+            className={`w-full justify-start text-left px-2 py-1.5 h-auto rounded ${activeSection === "invitations" ? "bg-gray-700 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-white"}`}
+            onClick={() => setActiveSection("invitations")}
+          >
+            Invitations
+          </Button>
         </div>
       </div>
 

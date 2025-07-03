@@ -5,6 +5,7 @@ import { ChevronDown, Hash, Volume2, Plus, Users, Settings, UserPlus, Bell, Pin 
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogTrigger } from "@/components/ui/dialog"
 import AddChannelModal from "./add-channel-modal"
+import AddUserModal from "./add-user-modal"
 
 interface TextChannel {
   _id: string;
@@ -29,6 +30,7 @@ export default function ChannelSidebar({ serverId, serverName, textChannels, voi
   const [textExpanded, setTextExpanded] = useState(true)
   const [voiceExpanded, setVoiceExpanded] = useState(true)
   const [addChannelModalOpen, setAddChannelModalOpen] = useState(false)
+  const [addUserModalOpen, setAddUserModalOpen] = useState(false)
   const [channelTypeToAdd, setChannelTypeToAdd] = useState<"text" | "voice" | null>(null);
 
   const handleAddChannelClick = (type: "text" | "voice") => {
@@ -57,9 +59,14 @@ export default function ChannelSidebar({ serverId, serverName, textChannels, voi
           <Button variant="ghost" size="icon" className="w-6 h-6 text-gray-400 hover:text-white">
             <Pin className="w-4 h-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="w-6 h-6 text-gray-400 hover:text-white">
-            <UserPlus className="w-4 h-4" />
-          </Button>
+          <Dialog open={addUserModalOpen} onOpenChange={setAddUserModalOpen}>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="icon" className="w-6 h-6 text-gray-400 hover:text-white">
+                <UserPlus className="w-4 h-4" />
+              </Button>
+            </DialogTrigger>
+            <AddUserModal isOpen={addUserModalOpen} onOpenChange={setAddUserModalOpen} serverId={serverId} />
+          </Dialog>
           <Button variant="ghost" size="icon" className="w-6 h-6 text-gray-400 hover:text-white">
             <Settings className="w-4 h-4" />
           </Button>
