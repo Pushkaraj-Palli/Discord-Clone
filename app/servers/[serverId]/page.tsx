@@ -10,7 +10,7 @@ import { cookies } from 'next/headers';
 
 async function getServerDetails(serverId: string) {
   const cookieStore = await cookies();
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/servers/${serverId}`, {
+  const res = await fetch(`/api/servers/${serverId}`, {
     headers: {
       'Cookie': cookieStore.toString(),
     },

@@ -54,7 +54,7 @@ export default function UserSettingsPage() {
 
   const fetchUserData = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/user/me`, {
+      const response = await fetch(`/api/user/me`, {
         headers: {
           'Authorization': `Bearer ${document.cookie.split('; ').find(row => row.startsWith('auth_token='))?.split('=')[1]}`,
         },
@@ -84,7 +84,7 @@ export default function UserSettingsPage() {
   const fetchInvitations = async () => {
     setLoadingInvitations(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/user/invitations`, {
+      const response = await fetch(`/api/user/invitations`, {
         headers: {
           'Authorization': `Bearer ${document.cookie.split('; ').find(row => row.startsWith('auth_token='))?.split('=')[1]}`,
         },
@@ -124,7 +124,7 @@ export default function UserSettingsPage() {
 
   const handleAcceptInvitation = async (serverId: string, invitationId: string) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/user/accept-invite`, {
+      const response = await fetch(`/api/user/accept-invite`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -168,7 +168,7 @@ export default function UserSettingsPage() {
 
   const handleDeclineInvitation = async (serverId: string, invitationId: string) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/user/decline-invite`, {
+      const response = await fetch(`/api/user/decline-invite`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -223,7 +223,7 @@ export default function UserSettingsPage() {
   const handleUpdateUser = async (field: keyof UserData, value: string) => {
     setIsEditing(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/user/me`, {
+      const response = await fetch(`/api/user/me`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -266,7 +266,7 @@ export default function UserSettingsPage() {
   const handleChangePassword = async () => {
     setIsEditing(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/user/me/password`, {
+      const response = await fetch(`/api/user/me/password`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -441,7 +441,7 @@ export default function UserSettingsPage() {
                 className="px-0 text-red-400 hover:text-red-300"
                 onClick={async () => {
                   try {
-                    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/logout`, {
+                    const response = await fetch(`/api/logout`, {
                       method: 'POST',
                       headers: {
                         'Authorization': `Bearer ${document.cookie.split('; ').find(row => row.startsWith('auth_token='))?.split('=')[1]}`,
