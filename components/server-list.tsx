@@ -7,6 +7,24 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Dialog, DialogTrigger } from "@/components/ui/dialog"
 import AddServerModal from "@/components/add-server-modal"
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { toast } from "@/components/ui/use-toast"
 
 interface Server { 
   _id: string;
@@ -19,6 +37,8 @@ interface Server {
 export default function ServerList() {
   const [servers, setServers] = useState<Server[]>([])
   const [addServerModalOpen, setAddServerModalOpen] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [serverToDeleteId, setServerToDeleteId] = useState<string | null>(null);
   const router = useRouter()
 
   const fetchServers = async () => {
@@ -43,6 +63,47 @@ export default function ServerList() {
     fetchServers();
   };
 
+  const handleDeleteClick = (serverId: string) => {
+    setServerToDeleteId(serverId);
+    setShowDeleteConfirm(true);
+  };
+
+  const deleteServer = async () => {
+    if (!serverToDeleteId) return;
+    try {
+      const response = await fetch(`/api/servers/${serverToDeleteId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${document.cookie.split('; ').find(row => row.startsWith('auth_token='))?.split('=')[1]}`,
+        },
+      });
+      if (response.ok) {
+        toast({
+          title: "Server Deleted",
+          description: "The server has been successfully deleted.",
+        });
+        fetchServers(); // Refresh server list
+        setServerToDeleteId(null);
+        setShowDeleteConfirm(false);
+        router.push('/'); // Redirect to home or another suitable page
+      } else {
+        const errorData = await response.json();
+        toast({
+          title: "Error",
+          description: errorData.error || "Failed to delete server.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting server:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while deleting the server.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col items-center py-3 space-y-2 bg-gray-900">
       {/* Discord Home Button */}
@@ -63,26 +124,54 @@ export default function ServerList() {
       {/* Server List */}
       {servers.map((server) => (
         <div key={server._id} className="relative group">
-          <Link href={`/servers/${server._id}`}>
-            <div
-              className={`w-12 h-12 ${
-                server.active
-                  ? "bg-indigo-500 rounded-xl"
-                  : "bg-gray-700 rounded-2xl group-hover:rounded-xl group-hover:bg-indigo-500"
-              } transition-all duration-200 flex items-center justify-center cursor-pointer server-icon relative overflow-hidden`}
-            >
-              {server.icon ? (
-                <img src={server.icon.replace(/%22$/, '').replace(/"$/, '')} alt={server.name} className="w-full h-full object-cover rounded-2xl group-hover:rounded-xl" />
-              ) : (
-                <span className="text-xl relative z-10">{server.name.charAt(0)}</span>
-              )}
-              {server.hasNotification && (
-                <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
-                  <span className="text-xs text-white font-bold">!</span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Link href={`/servers/${server._id}`}>
+                <div
+                  className={`w-12 h-12 ${
+                    server.active
+                      ? "bg-indigo-500 rounded-xl"
+                      : "bg-gray-700 rounded-2xl group-hover:rounded-xl group-hover:bg-indigo-500"
+                  } transition-all duration-200 flex items-center justify-center cursor-pointer server-icon relative overflow-hidden`}
+                  onContextMenu={(e) => e.preventDefault()} // Prevent default browser context menu
+                >
+                  {server.icon ? (
+                    <img src={server.icon.replace(/%22$/, '').replace(/"$/, '')} alt={server.name} className="w-full h-full object-cover rounded-2xl group-hover:rounded-xl" />
+                  ) : (
+                    <span className="text-xl relative z-10">{server.name.charAt(0)}</span>
+                  )}
+                  {server.hasNotification && (
+                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                      <span className="text-xs text-white font-bold">!</span>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          </Link>
+              </Link>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+                <AlertDialogTrigger asChild>
+                  <DropdownMenuItem onSelect={(e) => {
+                    e.preventDefault(); // Prevent dropdown from closing immediately
+                    handleDeleteClick(server._id);
+                  }}>Delete Server</DropdownMenuItem>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete the
+                      <span className="font-bold"> {server.name} </span> server and remove all associated data.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={deleteServer}>Delete</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* Active indicator */}
           <div
