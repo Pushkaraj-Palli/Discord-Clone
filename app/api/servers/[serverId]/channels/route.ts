@@ -14,7 +14,7 @@ export async function POST(req: NextRequest, { params }: { params: { serverId: s
     }
 
     const decoded = await verifyToken(token);
-    const { serverId } = params;
+    const { serverId } = await params;
     const { name, type } = await req.json();
 
     console.log(`Received channel creation request: Name - ${name}, Type - ${type}, Server ID - ${serverId}`);

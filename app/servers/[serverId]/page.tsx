@@ -33,6 +33,8 @@ async function getServerDetails(serverId: string) {
 export default async function ServerPage({ params }: { params: { serverId: string } }) {
   const awaitedParams = await Promise.resolve(params);
   const { serverId } = awaitedParams;
+  console.log("ServerPage - params:", params);
+  console.log("ServerPage - serverId:", serverId);
   const server = await getServerDetails(serverId);
 
   return (

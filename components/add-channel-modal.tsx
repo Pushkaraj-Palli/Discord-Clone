@@ -36,11 +36,14 @@ export default function AddChannelModal({ isOpen, onOpenChange, onChannelAdded, 
 
     setIsLoading(true);
 
+    console.log("AddChannelModal - serverId before fetch:", serverId);
+
     try {
       const response = await fetch(`/api/servers/${serverId}/channels`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${document.cookie.split('; ').find(row => row.startsWith('auth_token='))?.split('=')[1]}`,
         },
         body: JSON.stringify({ name: channelName, type: channelType }),
       });
