@@ -6,11 +6,15 @@ import ChatArea from "@/components/chat-area"
 import UserList from "@/components/user-list"
 import UserPanel from "@/components/user-panel"
 import LoadingSpinner from "@/components/loading-spinner"
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 
 async function getServerDetails(serverId: string) {
   const cookieStore = await cookies();
-  const res = await fetch(`/api/servers/${serverId}`, {
+  const headersList = await headers();
+  const host = headersList.get('host');
+  const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https';
+  const baseUrl = `${protocol}://${host}`;
+  const res = await fetch(`${baseUrl}/api/servers/${serverId}`, {
     headers: {
       'Cookie': cookieStore.toString(),
     },

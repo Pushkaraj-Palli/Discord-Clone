@@ -52,7 +52,7 @@ export default function LoginPage() {
       setCookie('auth_token', data.token, {
         maxAge: 60 * 60 * 24, // 24 hours
         path: '/',
-        sameSite: 'strict'
+        sameSite: 'strict',
       })
 
       // Redirect to home page
