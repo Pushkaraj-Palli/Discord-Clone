@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import {
   Hash,
   Users,
@@ -19,24 +19,108 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import MessageList from "@/components/message-list"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { useSocket } from "@/hooks/use-socket";
+import { IMessage } from "@/lib/models/Message";
+import { useEffect, useRef } from "react";
 
-export default function ChatArea({ serverName }: { serverName: string }) {
-  const [message, setMessage] = useState("")
-  const [isTyping, setIsTyping] = useState(false)
+interface ChatAreaProps {
+  serverName: string;
+  serverId: string;
+  channelId?: string;
+}
+
+export default function ChatArea({ serverName, serverId, channelId }: ChatAreaProps) {
+  const [message, setMessage] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [messages, setMessages] = useState<IMessage[]>([]);
+  const chatAreaRef = useRef<HTMLDivElement>(null);
+
+  const onMessage = useCallback((newMessage: IMessage) => {
+    if (newMessage.channel.toString() === channelId) {
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
+    }
+  }, [channelId]);
+
+  const onUserStatusUpdate = useCallback((data: { userId: string; status: string }) => {
+    console.log("User status updated:", data);
+    // Implement logic to update user statuses in the UI if needed
+  }, []);
+
+  const onError = useCallback((errorMessage: string) => {
+    console.error("WebSocket error in ChatArea:", errorMessage);
+    // Display error to the user
+  }, []);
+
+  const { isConnected, sendMessage, joinChannel, error } = useSocket({
+    onMessage,
+    onUserStatusUpdate,
+    onError
+  });
+
+  const fetchMessages = useCallback(async () => {
+    if (!channelId || !serverId) return;
+    try {
+      const res = await fetch(`/api/servers/${serverId}/channels/${channelId}/messages`);
+      if (!res.ok) {
+        throw new Error(`Failed to fetch messages: ${res.statusText}`);
+      }
+      const data = await res.json();
+      setMessages(data);
+    } catch (err) {
+      console.error("Error fetching historical messages:", err);
+      setMessages([]);
+    }
+  }, [channelId, serverId]);
+
+  // Clear messages immediately when channel changes
+  useEffect(() => {
+    if (channelId) {
+      console.log(`Channel changed to ${channelId}, clearing messages`);
+      setMessages([]);
+    }
+  }, [channelId]);
+
+  // Handle socket connection and message fetching
+  useEffect(() => {
+    if (channelId && serverId) {
+      console.log(`Fetching messages for channel ${channelId} on server ${serverId}`);
+      fetchMessages(); // Always fetch messages when channel or server changes
+      
+      if (isConnected) {
+        console.log(`Joining channel ${channelId} via socket`);
+        joinChannel(serverId, channelId);
+      }
+    }
+  }, [channelId, serverId, fetchMessages, isConnected, joinChannel]);
+
+  useEffect(() => {
+    // Scroll to bottom when new messages arrive
+    if (chatAreaRef.current) {
+      chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (message.trim()) {
-      console.log("Sending message:", message)
-      setMessage("")
-      setIsTyping(false)
+    e.preventDefault();
+    if (message.trim() && serverId && channelId && isConnected) {
+      sendMessage(serverId, channelId, message);
+      setMessage("");
+      setIsTyping(false);
+    } else if (!isConnected) {
+      console.warn("Cannot send message: WebSocket not connected.");
+      // Optionally, show a toast or error message to the user
+    } else if (!channelId) {
+      console.warn("Cannot send message: No channel selected.");
     }
-  }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setMessage(e.target.value)
-    setIsTyping(e.target.value.length > 0)
-  }
+    setMessage(e.target.value);
+    setIsTyping(e.target.value.length > 0);
+  };
+
+  // Find the current channel name based on channelId and server textChannels
+  const currentChannelName = serverName; // Fallback, will be replaced with actual channel name
 
   return (
     <div className="flex flex-col h-full bg-gray-750">
@@ -44,7 +128,7 @@ export default function ChatArea({ serverName }: { serverName: string }) {
       <div className="h-12 px-4 flex items-center justify-between border-b border-gray-900/50 shadow-lg bg-gray-800 relative">
         <div className="flex items-center">
           <Hash className="w-5 h-5 text-gray-400 mr-2" />
-          <span className="font-semibold text-white text-base">{serverName} - general</span>
+          <span className="font-semibold text-white text-base">{serverName} - {currentChannelName}</span>
           <div className="ml-2 h-4 w-px bg-gray-600" />
           <span className="ml-2 text-sm text-gray-400">General discussion for everyone</span>
         </div>
@@ -66,8 +150,8 @@ export default function ChatArea({ serverName }: { serverName: string }) {
       </div>
 
       {/* Messages Area */}
-      <ScrollArea className="flex-1 bg-gray-750">
-        <MessageList />
+      <ScrollArea ref={chatAreaRef} className="flex-1 bg-gray-750">
+        <MessageList messages={messages} />
       </ScrollArea>
 
       {/* Message Input */}
@@ -86,9 +170,10 @@ export default function ChatArea({ serverName }: { serverName: string }) {
             <Input
               value={message}
               onChange={handleInputChange}
-              placeholder="Message #general"
+              placeholder={channelId ? `Message #${currentChannelName}` : "Select a channel to message"}
               className="flex-1 bg-transparent border-0 focus:ring-0 text-white placeholder-gray-400 px-3 py-3 text-sm"
               maxLength={2000}
+              disabled={!channelId || !isConnected}
             />
 
             <div className="flex items-center mr-3 space-x-1">
@@ -97,6 +182,7 @@ export default function ChatArea({ serverName }: { serverName: string }) {
                 variant="ghost"
                 size="icon"
                 className="text-gray-400 hover:text-white w-8 h-8 discord-button"
+                disabled={!channelId || !isConnected}
               >
                 <Paperclip className="w-5 h-5" />
               </Button>
@@ -105,6 +191,7 @@ export default function ChatArea({ serverName }: { serverName: string }) {
                 variant="ghost"
                 size="icon"
                 className="text-gray-400 hover:text-white w-8 h-8 discord-button"
+                disabled={!channelId || !isConnected}
               >
                 <Gift className="w-5 h-5" />
               </Button>
@@ -113,6 +200,7 @@ export default function ChatArea({ serverName }: { serverName: string }) {
                 variant="ghost"
                 size="icon"
                 className="text-gray-400 hover:text-white w-8 h-8 discord-button"
+                disabled={!channelId || !isConnected}
               >
                 <Sticker className="w-5 h-5" />
               </Button>
@@ -121,6 +209,7 @@ export default function ChatArea({ serverName }: { serverName: string }) {
                 variant="ghost"
                 size="icon"
                 className="text-gray-400 hover:text-white w-8 h-8 discord-button"
+                disabled={!channelId || !isConnected}
               >
                 <Smile className="w-5 h-5" />
               </Button>
@@ -130,6 +219,7 @@ export default function ChatArea({ serverName }: { serverName: string }) {
                   variant="ghost"
                   size="icon"
                   className="text-indigo-400 hover:text-indigo-300 w-8 h-8 discord-button"
+                  disabled={!channelId || !isConnected}
                 >
                   <Send className="w-4 h-4" />
                 </Button>
@@ -145,5 +235,5 @@ export default function ChatArea({ serverName }: { serverName: string }) {
         </form>
       </div>
     </div>
-  )
+  );
 }

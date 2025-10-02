@@ -7,6 +7,7 @@ import UserList from "@/components/user-list"
 import UserPanel from "@/components/user-panel"
 import LoadingSpinner from "@/components/loading-spinner"
 import { cookies, headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 async function getServerDetails(serverId: string) {
   const cookieStore = await cookies();
@@ -30,12 +31,20 @@ async function getServerDetails(serverId: string) {
   return res.json();
 }
 
-export default async function ServerPage({ params }: { params: { serverId: string } }) {
-  const awaitedParams = await Promise.resolve(params);
-  const { serverId } = awaitedParams;
+export default async function ServerPage({ params, searchParams }: { params: { serverId: string }, searchParams: { channelId?: string } }) {
+  const { serverId } = params;
+  const { channelId } = searchParams;
+
   console.log("ServerPage - params:", params);
   console.log("ServerPage - serverId:", serverId);
+  console.log("ServerPage - channelId:", channelId);
+
   const server = await getServerDetails(serverId);
+
+  // Redirect to the first text channel if no channelId is provided
+  if (!channelId && server.textChannels && server.textChannels.length > 0) {
+    redirect(`/servers/${serverId}?channelId=${server.textChannels[0]._id}`);
+  }
 
   return (
     <div className="flex h-screen bg-gray-800">
@@ -53,7 +62,8 @@ export default async function ServerPage({ params }: { params: { serverId: strin
             serverId={serverId} 
             serverName={server.name} 
             textChannels={server.textChannels} 
-            voiceChannels={server.voiceChannels} 
+            voiceChannels={server.voiceChannels}
+            selectedChannelId={channelId}
           />
         </Suspense>
         <UserPanel />
@@ -62,7 +72,7 @@ export default async function ServerPage({ params }: { params: { serverId: strin
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
         <Suspense fallback={<LoadingSpinner />}>
-          <ChatArea serverName={server.name} />
+          <ChatArea serverName={server.name} serverId={serverId} channelId={channelId} />
         </Suspense>
       </div>
 

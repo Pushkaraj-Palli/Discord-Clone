@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "dev": "next dev",
-    "lint": "next lint",
-    "start": "next start"
+    "dev": "node -r esbuild-register server.ts",
+    "start": "NODE_ENV=production node .next/standalone/server.js",
+    "lint": "next lint"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -44,6 +44,7 @@
     "cmdk": "1.0.4",
     "cookies-next": "^6.0.0",
     "date-fns": "4.1.0",
+    "dotenv": "^17.2.2",
     "embla-carousel-react": "8.5.1",
     "input-otp": "1.4.1",
     "jose": "^6.0.11",
@@ -57,6 +58,8 @@
     "react-hook-form": "^7.54.1",
     "react-resizable-panels": "^2.1.7",
     "recharts": "2.15.0",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
     "sonner": "^1.7.1",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
@@ -68,6 +71,7 @@
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "esbuild-register": "^3.6.0",
     "postcss": "^8.5",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"

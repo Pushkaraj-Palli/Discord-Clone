@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogTrigger } from "@/components/ui/dialog"
 import AddChannelModal from "./add-channel-modal"
 import AddUserModal from "./add-user-modal"
+import { useRouter, useSearchParams } from 'next/navigation';
 
 interface TextChannel {
   _id: string;
@@ -24,14 +25,17 @@ interface ChannelSidebarProps {
   serverName: string;
   textChannels: TextChannel[];
   voiceChannels: VoiceChannel[];
+  selectedChannelId?: string;
 }
 
-export default function ChannelSidebar({ serverId, serverName, textChannels, voiceChannels }: ChannelSidebarProps) {
+export default function ChannelSidebar({ serverId, serverName, textChannels, voiceChannels, selectedChannelId }: ChannelSidebarProps) {
   const [textExpanded, setTextExpanded] = useState(true)
   const [voiceExpanded, setVoiceExpanded] = useState(true)
   const [addChannelModalOpen, setAddChannelModalOpen] = useState(false)
   const [addUserModalOpen, setAddUserModalOpen] = useState(false)
   const [channelTypeToAdd, setChannelTypeToAdd] = useState<"text" | "voice" | null>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleAddChannelClick = (type: "text" | "voice") => {
     setChannelTypeToAdd(type);
@@ -39,12 +43,17 @@ export default function ChannelSidebar({ serverId, serverName, textChannels, voi
   };
 
   const handleChannelAdded = () => {
-    // This function will be called after a channel is successfully added.
-    // In a real application, you might want to re-fetch the server details
-    // or update the state more precisely.
     console.log("Channel added, refreshing channel list (ideally).");
-    // For now, we'll just close the modal. A full refresh would involve prop drilling or context.
     setAddChannelModalOpen(false);
+    // A more robust solution would involve revalidating path or refetching server data
+    // For now, assume the parent component handles a refresh after a channel is added.
+  };
+
+  const handleChannelClick = (channelId: string) => {
+    const currentPath = `/servers/${serverId}`;
+    const newSearchParams = new URLSearchParams(searchParams.toString());
+    newSearchParams.set('channelId', channelId);
+    router.push(`${currentPath}?${newSearchParams.toString()}`);
   };
 
   return (
@@ -105,7 +114,8 @@ export default function ChannelSidebar({ serverId, serverName, textChannels, voi
                   key={channel._id || channel.name} // Use _id if available, fallback to name
                   variant="ghost"
                   size="sm"
-                  className={`w-full justify-start px-2 py-1.5 h-auto text-gray-400 hover:text-gray-300 hover:bg-gray-700/50 rounded channel-item group ${false ? "bg-gray-700/60 text-white active" : ""}`}
+                  onClick={() => handleChannelClick(channel._id)}
+                  className={`w-full justify-start px-2 py-1.5 h-auto text-gray-400 hover:text-gray-300 hover:bg-gray-700/50 rounded channel-item group ${selectedChannelId === channel._id ? "bg-gray-700/60 text-white active" : ""}`}
                 >
                   <Hash className="w-4 h-4 mr-2 flex-shrink-0" />
                   <span className="truncate">{channel.name}</span>
@@ -150,7 +160,8 @@ export default function ChannelSidebar({ serverId, serverName, textChannels, voi
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="w-full justify-start px-2 py-1.5 h-auto text-gray-400 hover:text-gray-300 hover:bg-gray-700/50 rounded channel-item group"
+                    onClick={() => handleChannelClick(channel._id)}
+                    className={`w-full justify-start px-2 py-1.5 h-auto text-gray-400 hover:text-gray-300 hover:bg-gray-700/50 rounded channel-item group ${selectedChannelId === channel._id ? "bg-gray-700/60 text-white active" : ""}`}
                   >
                     <Volume2 className="w-4 h-4 mr-2 flex-shrink-0" />
                     <span className="truncate flex-1">{channel.name}</span>
