@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "dev": "node -r esbuild-register server.ts",
-    "start": "NODE_ENV=production node .next/standalone/server.js",
-    "lint": "next lint"
+    "dev": "next dev",
+    "dev:server": "node -r esbuild-register server.ts",
+    "start": "next start",
+    "lint": "next lint",
+    "vercel-build": "next build"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
