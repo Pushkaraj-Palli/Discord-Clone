@@ -12,6 +12,7 @@ const registerSchema = z.object({
   email: z.string().email("Invalid email address"),
   username: z.string().min(3, "Username must be at least 3 characters").max(30, "Username cannot exceed 30 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
+  avatarUrl: z.string().optional(), // Base64 encoded image
 });
 
 export async function POST(request: NextRequest) {
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const { email, username, password } = validationResult.data;
+    const { email, username, password, avatarUrl } = validationResult.data;
     
     // Connect to database (try both methods)
     let dbConnected = false;
@@ -117,6 +118,7 @@ export async function POST(request: NextRequest) {
         username,
         password: hashedPassword,
         status: 'offline',
+        avatarUrl: avatarUrl || null, // Store Base64 avatar or null
       });
       console.log('User created successfully with ID:', newUser._id.toString());
     } catch (createError) {

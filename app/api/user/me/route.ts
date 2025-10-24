@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth";
 import connectToDatabase from "@/lib/db";
 import User from "@/lib/models/User";
+import { isValidBase64DataUrl } from "@/lib/utils/imageUtils";
 
 export async function GET(request: NextRequest) {
   try {
@@ -95,12 +96,23 @@ export async function PATCH(request: NextRequest) {
     const userId = payload.id;
     const body = await request.json();
 
-    const allowedFields = ['displayName', 'username', 'email', 'phoneNumber'];
+    const allowedFields = ['displayName', 'username', 'email', 'phoneNumber', 'avatarUrl'];
     const updates: { [key: string]: any } = {};
 
     for (const field of allowedFields) {
       if (body[field] !== undefined) {
-        updates[field] = body[field];
+        if (field === 'avatarUrl') {
+          // Validate Base64 avatar data
+          if (body[field] !== null && body[field] !== '' && !isValidBase64DataUrl(body[field])) {
+            return NextResponse.json(
+              { error: "Invalid avatar format. Please use a valid image file." },
+              { status: 400 }
+            );
+          }
+          updates[field] = body[field];
+        } else {
+          updates[field] = body[field];
+        }
       }
     }
 

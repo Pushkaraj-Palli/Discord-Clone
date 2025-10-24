@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { X, Loader2 } from "lucide-react"
+import { X, Loader2, Upload, Camera } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import {
   Dialog,
@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useRouter } from 'next/navigation';
+import { validateImageFile, resizeImage } from "@/lib/utils/imageUtils";
 
 
 interface UserData {
@@ -51,6 +52,9 @@ export default function UserSettingsPage() {
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [invitations, setInvitations] = useState<any[]>([]);
   const [loadingInvitations, setLoadingInvitations] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [isAvatarEditOpen, setIsAvatarEditOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchUserData = async () => {
     try {
@@ -312,6 +316,79 @@ export default function UserSettingsPage() {
     return `${maskedName}@${domain}`;
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validation = validateImageFile(file);
+    if (!validation.isValid) {
+      toast({
+        title: "Error",
+        description: validation.error || 'Invalid file',
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const resizedBase64 = await resizeImage(file, 200, 200, 0.8);
+      setAvatarPreview(resizedBase64);
+      setIsAvatarEditOpen(true);
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: 'Failed to process image. Please try again.',
+        variant: "destructive",
+      });
+      console.error('Avatar upload error:', err);
+    }
+  };
+
+  const handleSaveAvatar = async () => {
+    if (!avatarPreview) return;
+    
+    setIsEditing(true);
+    try {
+      const response = await fetch(`/api/user/me`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${document.cookie.split('; ').find(row => row.startsWith('auth_token='))?.split('=')[1]}`,
+        },
+        body: JSON.stringify({ avatarUrl: avatarPreview }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Profile picture updated successfully.",
+        });
+        fetchUserData();
+        setIsAvatarEditOpen(false);
+        setAvatarPreview(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      } else {
+        const errorData = await response.json();
+        toast({
+          title: "Error",
+          description: errorData.error || "Failed to update profile picture.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error updating avatar:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsEditing(false);
+    }
+  };
+
   const renderContent = () => {
     switch (activeSection) {
       case "my-account":
@@ -334,13 +411,40 @@ export default function UserSettingsPage() {
             <div className="bg-gray-900 rounded-lg p-6 mb-6 relative w-full">
               <div className="absolute top-0 left-0 w-full h-20 bg-red-800 rounded-t-lg" /> {/* Placeholder for banner */}
               <div className="relative flex items-end -mt-10 mb-4">
-                {/* Avatar Placeholder */}
-                <div className="w-24 h-24 rounded-full bg-gray-600 border-4 border-gray-900 flex items-center justify-center text-gray-300 text-xs mr-4">
-                  {userData?.avatarUrl ? <img src={userData.avatarUrl} alt="User Avatar" className="rounded-full" /> : "Avatar"}
+                {/* Avatar */}
+                <div className="w-24 h-24 rounded-full bg-gray-600 border-4 border-gray-900 overflow-hidden mr-4 relative group">
+                  {userData?.avatarUrl ? (
+                    <img src={userData.avatarUrl} alt="User Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-2xl font-bold">
+                      {userData?.username?.charAt(0)?.toUpperCase() || 'U'}
+                    </div>
+                  )}
+                  
+                  {/* Avatar Upload Overlay */}
+                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                    <Camera className="w-6 h-6 text-white" />
+                  </div>
                 </div>
-                <Button className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm">
-                  Edit User Profile
-                </Button>
+                
+                <div className="space-y-2">
+                  <Button 
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Change Avatar
+                  </Button>
+                  
+                  {/* Hidden File Input */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                  />
+                </div>
               </div>
               <div className="bg-gray-800 rounded-md p-4 mt-4 w-full">
                 <p className="text-xl font-semibold text-white mb-2">{userData?.displayName || userData?.username}</p>
@@ -487,9 +591,15 @@ export default function UserSettingsPage() {
             <div className="bg-gray-900 rounded-lg p-6 mb-6 relative">
               <div className="absolute top-0 left-0 w-full h-20 bg-blue-800 rounded-t-lg" /> {/* Placeholder for banner */}
               <div className="relative flex items-end -mt-10 mb-4">
-                {/* Avatar Placeholder */}
-                <div className="w-24 h-24 rounded-full bg-gray-600 border-4 border-gray-900 flex items-center justify-center text-gray-300 text-xs mr-4">
-                  {userData?.avatarUrl ? <img src={userData.avatarUrl} alt="User Avatar" className="rounded-full" /> : "Avatar"}
+                {/* Avatar */}
+                <div className="w-24 h-24 rounded-full bg-gray-600 border-4 border-gray-900 overflow-hidden mr-4">
+                  {userData?.avatarUrl ? (
+                    <img src={userData.avatarUrl} alt="User Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-2xl font-bold">
+                      {userData?.username?.charAt(0)?.toUpperCase() || 'U'}
+                    </div>
+                  )}
                 </div>
                 <Button className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm">
                   Edit User Profile
@@ -794,6 +904,45 @@ export default function UserSettingsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Avatar Edit Dialog */}
+      <Dialog open={isAvatarEditOpen} onOpenChange={setIsAvatarEditOpen}>
+        <DialogContent className="sm:max-w-[425px] bg-gray-800 text-white">
+          <DialogHeader>
+            <DialogTitle>Update Profile Picture</DialogTitle>
+            <DialogDescription>Preview your new profile picture</DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-4 py-4">
+            {avatarPreview && (
+              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-gray-600">
+                <img src={avatarPreview} alt="Avatar preview" className="w-full h-full object-cover" />
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="ghost" 
+              onClick={() => {
+                setIsAvatarEditOpen(false);
+                setAvatarPreview(null);
+                if (fileInputRef.current) {
+                  fileInputRef.current.value = '';
+                }
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              onClick={handleSaveAvatar}
+              disabled={isEditing || !avatarPreview}
+            >
+              {isEditing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} 
+              Save Profile Picture
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
-} 
+}

@@ -84,13 +84,13 @@ export default function MessageList({ messages }: MessageListProps) {
               {showAvatar ? (
                 <div className="flex items-start space-x-3">
                   <Avatar className="w-10 h-10 mt-0.5">
-                    <AvatarImage src={message.sender.avatarUrl || "/placeholder.svg"} alt={message.sender.username} />
-                    <AvatarFallback>
-                      {message.sender.username
-                        .split(" ")
-                        .map((n: string) => n[0])
-                        .join("")}
-                    </AvatarFallback>
+                    {message.sender.avatarUrl ? (
+                      <AvatarImage src={message.sender.avatarUrl} alt={message.sender.username} />
+                    ) : (
+                      <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+                        {message.sender.username.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    )}
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline space-x-2 mb-1">

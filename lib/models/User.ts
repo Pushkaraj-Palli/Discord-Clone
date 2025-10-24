@@ -44,7 +44,7 @@ const userSchema = new Schema<IUser>(
     },
     avatarUrl: {
       type: String,
-      default: "/placeholder-user.jpg",
+      default: null, // Will be generated as Base64 on first login if null
     },
     status: {
       type: String,
