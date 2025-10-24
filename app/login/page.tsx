@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from "@/components/ui/button"
@@ -8,18 +8,11 @@ import { Input } from "@/components/ui/input"
 import { Hash, CheckCircle } from "lucide-react"
 import { setCookie } from 'cookies-next'
 
-export default function LoginPage() {
-  const router = useRouter()
+// Component to handle search params with Suspense boundary
+function SuccessMessage() {
   const searchParams = useSearchParams()
   const registered = searchParams.get('registered')
-  
-  const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  })
 
   useEffect(() => {
     if (registered) {
@@ -27,10 +20,28 @@ export default function LoginPage() {
     }
   }, [registered])
 
+  if (!success) return null
+
+  return (
+    <div className="mb-6 p-3 bg-green-900/30 border border-green-500 rounded-md flex items-center text-green-400">
+      <CheckCircle className="w-5 h-5 mr-2 flex-shrink-0" />
+      <span>{success}</span>
+    </div>
+  )
+}
+
+export default function LoginPage() {
+  const router = useRouter()
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  })
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    setSuccess('')
     setLoading(true)
 
     try {
@@ -83,12 +94,9 @@ export default function LoginPage() {
         <h2 className="text-2xl font-bold text-white text-center mb-6">Welcome back!</h2>
         <p className="text-gray-400 text-center mb-8">We're so excited to see you again!</p>
 
-        {success && (
-          <div className="mb-6 p-3 bg-green-900/30 border border-green-500 rounded-md flex items-center text-green-400">
-            <CheckCircle className="w-5 h-5 mr-2 flex-shrink-0" />
-            <span>{success}</span>
-          </div>
-        )}
+        <Suspense fallback={null}>
+          <SuccessMessage />
+        </Suspense>
 
         <form onSubmit={handleSubmit}>
           <div className="space-y-4">

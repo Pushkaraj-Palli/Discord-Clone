@@ -15,11 +15,8 @@ const nextConfig = {
     MONGODB_URI: process.env.MONGODB_URI,
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
   },
-  // For Vercel deployment
-  output: process.env.NODE_ENV === 'production' ? 'standalone' : undefined,
-  experimental: {
-    serverComponentsExternalPackages: ['mongoose'],
-  },
+  // Removed standalone output for Windows compatibility
+  serverExternalPackages: ['mongoose'],
 }
 
 export default nextConfig
