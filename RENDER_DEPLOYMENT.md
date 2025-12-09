@@ -195,7 +195,13 @@ If the build fails due to database connection issues:
 - Check that your MongoDB URI is correctly formatted
 - Verify network access settings in MongoDB Atlas
 
-#### 4. Dependency Issues
+#### 4. Missing Dependencies Error
+If you see "Cannot find module" errors during startup:
+- Ensure all required dependencies are in `package.json` dependencies (not devDependencies)
+- Required packages: `jsonwebtoken`, `express`, `cors`, `mongoose`, `bcryptjs`
+- Redeploy after updating dependencies
+
+#### 5. Dependency Issues
 If you encounter peer dependency warnings:
 - Use `npm install --legacy-peer-deps` in the build command
 - This is already included in the recommended build command

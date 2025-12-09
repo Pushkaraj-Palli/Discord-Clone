@@ -20,14 +20,6 @@ const nextConfig = {
   serverExternalPackages: ['mongoose'],
   // Disable static optimization to prevent build-time database connections
   trailingSlash: false,
-  // Skip static generation for pages that require runtime data
-  experimental: {
-    missingSuspenseWithCSRBailout: false,
-  },
-  // Don't try to optimize pages during build that need runtime data
-  generateBuildId: async () => {
-    return 'build-' + Date.now()
-  },
 }
 
 export default nextConfig
