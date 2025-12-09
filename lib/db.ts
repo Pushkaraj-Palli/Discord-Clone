@@ -10,7 +10,7 @@ declare global {
 }
 
 const getMongoUri = () => {
-  const uri = "mongodb+srv://2005pushkarajpalli:ii0UGD0JTAJg8SVV@cluster0.asuwnfx.mongodb.net/discord_clone?retryWrites=true&w=majority&appName=Cluster0";
+  const uri = process.env.MONGODB_URI || "mongodb+srv://2005pushkarajpalli:ii0UGD0JTAJg8SVV@cluster0.asuwnfx.mongodb.net/discord_clone?retryWrites=true&w=majority&appName=Cluster0";
   
   if (!uri) {
     throw new Error("MONGODB_URI is not defined in environment variables.");

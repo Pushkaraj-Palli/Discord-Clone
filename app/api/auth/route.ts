@@ -16,7 +16,18 @@ const loginSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     console.log('Login request received');
-    const body = await request.json();
+    
+    let body;
+    try {
+      body = await request.json();
+    } catch (jsonError) {
+      console.error('Invalid JSON in request body:', jsonError);
+      return NextResponse.json(
+        { error: "Invalid request format" },
+        { status: 400 }
+      );
+    }
+    
     console.log('Request body (without password):', {...body, password: '[REDACTED]'});
     
     // Validate input data

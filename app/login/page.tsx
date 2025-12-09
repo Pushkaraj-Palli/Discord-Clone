@@ -1,43 +1,33 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Hash, CheckCircle } from "lucide-react"
 import { setCookie } from 'cookies-next'
 
-// Component to handle search params with Suspense boundary
-function SuccessMessage() {
-  const searchParams = useSearchParams()
-  const registered = searchParams.get('registered')
-  const [success, setSuccess] = useState('')
-
-  useEffect(() => {
-    if (registered) {
-      setSuccess('Account created successfully! You can now log in.')
-    }
-  }, [registered])
-
-  if (!success) return null
-
-  return (
-    <div className="mb-6 p-3 bg-green-900/30 border border-green-500 rounded-md flex items-center text-green-400">
-      <CheckCircle className="w-5 h-5 mr-2 flex-shrink-0" />
-      <span>{success}</span>
-    </div>
-  )
-}
-
 export default function LoginPage() {
   const router = useRouter()
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState('')
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   })
+
+  useEffect(() => {
+    // Check for success message from URL params on client side only
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      const registered = urlParams.get('registered')
+      if (registered) {
+        setSuccess('Account created successfully! You can now log in.')
+      }
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -53,11 +43,20 @@ export default function LoginPage() {
         body: JSON.stringify(formData)
       })
 
-      const data = await res.json()
-
       if (!res.ok) {
-        throw new Error(data.error || 'Something went wrong')
+        // Handle different error responses
+        let errorMessage = 'Something went wrong'
+        try {
+          const errorData = await res.json()
+          errorMessage = errorData.error || errorMessage
+        } catch (jsonError) {
+          // If JSON parsing fails, use status text
+          errorMessage = `Server error: ${res.status} ${res.statusText}`
+        }
+        throw new Error(errorMessage)
       }
+
+      const data = await res.json()
 
       // Set the token in a cookie
       setCookie('auth_token', data.token, {
@@ -94,9 +93,12 @@ export default function LoginPage() {
         <h2 className="text-2xl font-bold text-white text-center mb-6">Welcome back!</h2>
         <p className="text-gray-400 text-center mb-8">We're so excited to see you again!</p>
 
-        <Suspense fallback={null}>
-          <SuccessMessage />
-        </Suspense>
+        {success && (
+          <div className="mb-6 p-3 bg-green-900/30 border border-green-500 rounded-md flex items-center text-green-400">
+            <CheckCircle className="w-5 h-5 mr-2 flex-shrink-0" />
+            <span>{success}</span>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="space-y-4">

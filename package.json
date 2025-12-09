@@ -9,6 +9,7 @@
     "start": "next start",
     "start:render": "node render-server.js",
     "test:deployment": "node test-deployment.js",
+    "test:fixes": "node test-fixes.js",
     "debug:build": "node debug-build.js",
     "lint": "next lint"
   },

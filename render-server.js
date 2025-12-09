@@ -67,7 +67,17 @@ const verifyToken = async (token) => {
 // Database connection with retry logic
 const connectToDatabase = async (retries = 5) => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
+    if (!process.env.MONGODB_URI) {
+      throw new Error('MONGODB_URI environment variable is not set');
+    }
+    
+    await mongoose.connect(process.env.MONGODB_URI, {
+      bufferCommands: false,
+      connectTimeoutMS: 30000,
+      socketTimeoutMS: 45000,
+      serverSelectionTimeoutMS: 60000,
+      maxPoolSize: 10,
+    });
     console.log('Connected to MongoDB successfully');
   } catch (error) {
     console.error('MongoDB connection error:', error);
@@ -76,7 +86,8 @@ const connectToDatabase = async (retries = 5) => {
       setTimeout(() => connectToDatabase(retries - 1), 5000);
     } else {
       console.error('Failed to connect to MongoDB after multiple attempts');
-      process.exit(1);
+      // Don't exit process, let the server start without DB for now
+      console.warn('Server starting without database connection');
     }
   }
 };
@@ -110,18 +121,30 @@ app.prepare().then(async () => {
       try {
         // Health check endpoint
         if (req.url === '/health') {
-          const healthStatus = {
-            status: 'healthy',
-            timestamp: new Date().toISOString(),
-            services: {
-              nextjs: 'running',
-              socketio: 'running',
-              database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
-            }
-          };
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify(healthStatus));
-          return;
+          try {
+            const healthStatus = {
+              status: mongoose.connection.readyState === 1 ? 'healthy' : 'degraded',
+              timestamp: new Date().toISOString(),
+              services: {
+                nextjs: 'running',
+                socketio: 'running',
+                database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+              },
+              environment: {
+                nodeEnv: process.env.NODE_ENV,
+                port: port,
+                mongoUri: process.env.MONGODB_URI ? 'configured' : 'missing'
+              }
+            };
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(healthStatus, null, 2));
+            return;
+          } catch (healthError) {
+            console.error('Health check error:', healthError);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ status: 'error', error: healthError.message }));
+            return;
+          }
         }
 
         // Handle all other requests with Next.js
