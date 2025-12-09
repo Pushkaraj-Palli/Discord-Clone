@@ -3,7 +3,7 @@ services:
     name: discord-clone-app
     env: node
     plan: starter
-    buildCommand: npm install && npm run build:render
+    buildCommand: npm install --legacy-peer-deps && NODE_ENV=production npm run build:render
     startCommand: npm run start:render
     envVars:
       - key: NODE_ENV
@@ -20,6 +20,8 @@ services:
         value: https://discord-clone-app.onrender.com  # Update with your actual service name
       - key: RENDER_SERVICE_NAME
         value: discord-clone-app  # Update with your actual service name
+      - key: NEXT_PUBLIC_SOCKET_URL
+        value: ""  # Empty for same-origin connections
     healthCheckPath: /health
     autoDeploy: true
     branch: main  # or your default branch

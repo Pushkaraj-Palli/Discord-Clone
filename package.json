@@ -4,11 +4,12 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "build:render": "next build",
+    "build:render": "NODE_ENV=production next build",
     "dev": "next dev",
     "start": "next start",
     "start:render": "node render-server.js",
     "test:deployment": "node test-deployment.js",
+    "debug:build": "node debug-build.js",
     "lint": "next lint"
   },
   "dependencies": {

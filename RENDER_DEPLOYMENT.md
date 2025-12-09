@@ -26,7 +26,7 @@ This guide covers deploying the entire Discord Clone application on Render as a 
    - **Root Directory**: Leave empty (uses repository root)
 
 3. **Build & Deploy Settings**:
-   - **Build Command**: `npm install && npm run build:render`
+   - **Build Command**: `npm install --legacy-peer-deps && NODE_ENV=production npm run build:render`
    - **Start Command**: `npm run start:render`
 
 ### 2. Environment Variables
@@ -165,3 +165,58 @@ The application includes a health check endpoint at `/health` that returns:
 - Keep dependencies updated
 - Monitor for security vulnerabilities
 - Implement proper input validation and sanitization
+## Bui
+ld Troubleshooting
+
+### Common Build Issues
+
+#### 1. Html Import Error
+If you see an error about `<Html>` being imported outside of `_document`, this is usually caused by:
+- Incorrect Next.js configuration
+- Build-time database connections
+- Missing environment variables during build
+
+**Solution**: Ensure all environment variables are set during build, especially:
+```
+NODE_ENV=production
+MONGODB_URI=your_connection_string
+JWT_SECRET=your_secret
+NEXTAUTH_SECRET=your_nextauth_secret
+```
+
+#### 2. NODE_ENV Warning
+If you see warnings about non-standard NODE_ENV values:
+- Make sure NODE_ENV is set to exactly `production` in Render
+- Use the updated build command: `NODE_ENV=production npm run build:render`
+
+#### 3. Database Connection During Build
+If the build fails due to database connection issues:
+- Ensure MongoDB Atlas allows connections from Render's IP ranges
+- Check that your MongoDB URI is correctly formatted
+- Verify network access settings in MongoDB Atlas
+
+#### 4. Dependency Issues
+If you encounter peer dependency warnings:
+- Use `npm install --legacy-peer-deps` in the build command
+- This is already included in the recommended build command
+
+### Debug Build Locally
+To debug build issues locally, run:
+```bash
+npm run debug:build
+```
+
+This will run the build with proper environment variables and help identify issues.
+
+### Render Build Logs
+Monitor the build process in Render dashboard:
+1. Go to your service in Render dashboard
+2. Click on "Logs" tab
+3. Watch the build process in real-time
+4. Look for specific error messages and stack traces
+
+If the build continues to fail, check:
+1. All environment variables are properly set
+2. MongoDB Atlas network access allows Render IPs
+3. No syntax errors in your code
+4. All dependencies are properly installed

@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+/.kiro/
 
 # next.js
 /.next/

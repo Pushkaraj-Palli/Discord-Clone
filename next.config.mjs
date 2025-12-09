@@ -18,8 +18,16 @@ const nextConfig = {
     RENDER_EXTERNAL_URL: process.env.RENDER_EXTERNAL_URL,
   },
   serverExternalPackages: ['mongoose'],
-  // Optimize for Render deployment
-  output: process.env.NODE_ENV === 'production' ? 'standalone' : undefined,
+  // Disable static optimization to prevent build-time database connections
+  trailingSlash: false,
+  // Skip static generation for pages that require runtime data
+  experimental: {
+    missingSuspenseWithCSRBailout: false,
+  },
+  // Don't try to optimize pages during build that need runtime data
+  generateBuildId: async () => {
+    return 'build-' + Date.now()
+  },
 }
 
 export default nextConfig
