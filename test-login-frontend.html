@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .form-group { margin: 10px 0; }
+        input { padding: 10px; margin: 5px 0; width: 300px; }
+        button { padding: 10px 20px; background: #4f46e5; color: white; border: none; cursor: pointer; }
+        .result { margin: 20px 0; padding: 10px; background: #333; }
+    </style>
+</head>
+<body>
+    <h1>Login Test</h1>
+    <form id="loginForm">
+        <div class="form-group">
+            <label>Email:</label><br>
+            <input type="email" id="email" value="luffy@gmail.com" required>
+        </div>
+        <div class="form-group">
+            <label>Password:</label><br>
+            <input type="password" id="password" value="123456" required>
+        </div>
+        <button type="submit">Login</button>
+    </form>
+    
+    <div id="result" class="result"></div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.innerHTML = 'Testing login...';
+            
+            try {
+                const response = await fetch('https://discord-clone-app-wcfo.onrender.com/api/auth', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password }),
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <h3>Login Successful!</h3>
+                        <p>User: ${data.user.username}</p>
+                        <p>Email: ${data.user.email}</p>
+                        <p>Token received: ${data.token ? 'Yes' : 'No'}</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<h3>Login Failed</h3><p>${data.error}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<h3>Error</h3><p>${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-// Use require instead of import to avoid TypeScript errors
-const bcrypt = require('bcryptjs');
+import bcrypt from 'bcryptjs';
 import { z } from "zod";
 import connectToDatabase from "@/lib/db";
 import connectToDatabaseAlt from "@/lib/db-alternative";
@@ -42,22 +41,30 @@ export async function POST(request: NextRequest) {
     
     const { email, password } = validationResult.data;
     
-    // Connect to database (try both methods)
-    let dbConnected = false;
+    // Connect to database with timeout
+    console.log('Connecting to MongoDB...');
     
     try {
-      console.log('Connecting to MongoDB (primary method)...');
-      await connectToDatabase();
-      console.log('MongoDB connected successfully (primary)');
-      dbConnected = true;
+      // Try primary connection first with timeout
+      const connectionPromise = connectToDatabase();
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Connection timeout')), 10000)
+      );
+      
+      await Promise.race([connectionPromise, timeoutPromise]);
+      console.log('MongoDB connected successfully');
     } catch (primaryDbError) {
       console.error('Primary MongoDB connection error:', primaryDbError);
       
       try {
         console.log('Trying alternative MongoDB connection...');
-        await connectToDatabaseAlt();
+        const altConnectionPromise = connectToDatabaseAlt();
+        const altTimeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Alt connection timeout')), 5000)
+        );
+        
+        await Promise.race([altConnectionPromise, altTimeoutPromise]);
         console.log('MongoDB connected successfully (alternative)');
-        dbConnected = true;
       } catch (altDbError) {
         console.error('Alternative MongoDB connection error:', altDbError);
         return NextResponse.json(
@@ -65,13 +72,6 @@ export async function POST(request: NextRequest) {
           { status: 500 }
         );
       }
-    }
-    
-    if (!dbConnected) {
-      return NextResponse.json(
-        { error: "Could not connect to database" },
-        { status: 500 }
-      );
     }
     
     // Find user by email
@@ -120,11 +120,17 @@ export async function POST(request: NextRequest) {
     
     // Return success response with token
     console.log('Login successful');
-    return NextResponse.json({
+    const response = NextResponse.json({
       message: "Login successful",
       user: userResponse,
       token
     });
+    
+    // Add security headers
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    
+    return response;
     
   } catch (error) {
     console.error("Login error:", error);
