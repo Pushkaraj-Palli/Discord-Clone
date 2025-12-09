@@ -26,13 +26,22 @@ export const useSocket = (options?: UseSocketOptions) => {
       return;
     }
 
-    // Connect to the custom server's Socket.IO endpoint
-    const newSocket = io(`http://${window.location.hostname}:3000`, {
+    // Connect to the Socket.IO server
+    // For Render deployment, use same-origin connection (empty URL)
+    // For local development, use explicit URL if provided
+    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || '';
+    
+    const newSocket = io(socketUrl, {
       path: '/api/socket.io',
       auth: {
         token,
       },
-      transports: ['websocket'], // Prefer WebSocket
+      transports: ['websocket', 'polling'], // Allow both WebSocket and polling
+      forceNew: false,
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 5,
+      timeout: 20000,
     });
 
     newSocket.on('connect', () => {

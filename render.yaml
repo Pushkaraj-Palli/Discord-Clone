@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: discord-clone-app
+    env: node
+    plan: starter
+    buildCommand: npm install && npm run build:render
+    startCommand: npm run start:render
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false  # Set this manually in Render dashboard
+      - key: JWT_SECRET
+        sync: false  # Set this manually in Render dashboard
+      - key: NEXTAUTH_SECRET
+        sync: false  # Set this manually in Render dashboard
+      - key: RENDER_EXTERNAL_URL
+        value: https://discord-clone-app.onrender.com  # Update with your actual service name
+      - key: RENDER_SERVICE_NAME
+        value: discord-clone-app  # Update with your actual service name
+    healthCheckPath: /health
+    autoDeploy: true
+    branch: main  # or your default branch

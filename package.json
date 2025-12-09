@@ -4,11 +4,12 @@
   "private": true,
   "scripts": {
     "build": "next build",
+    "build:render": "next build",
     "dev": "next dev",
-    "dev:server": "node -r esbuild-register server.ts",
     "start": "next start",
-    "lint": "next lint",
-    "vercel-build": "next build"
+    "start:render": "node render-server.js",
+    "test:deployment": "node test-deployment.js",
+    "lint": "next lint"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -77,6 +78,10 @@
     "postcss": "^8.5",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   },
   "overrides": {
     "date-fns": "^3.6.0"

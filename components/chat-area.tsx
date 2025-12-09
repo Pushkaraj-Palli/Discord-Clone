@@ -100,17 +100,43 @@ export default function ChatArea({ serverName, serverId, channelId }: ChatAreaPr
     }
   }, [messages]);
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (message.trim() && serverId && channelId && isConnected) {
-      sendMessage(serverId, channelId, message);
-      setMessage("");
-      setIsTyping(false);
-    } else if (!isConnected) {
-      console.warn("Cannot send message: WebSocket not connected.");
-      // Optionally, show a toast or error message to the user
-    } else if (!channelId) {
-      console.warn("Cannot send message: No channel selected.");
+    if (!message.trim() || !serverId || !channelId) {
+      console.warn("Cannot send message: Missing required fields.");
+      return;
+    }
+
+    try {
+      // Try Socket.IO first if connected
+      if (isConnected) {
+        sendMessage(serverId, channelId, message);
+        setMessage("");
+        setIsTyping(false);
+        return;
+      }
+
+      // Fallback to HTTP API for Vercel deployment
+      const response = await fetch(`/api/servers/${serverId}/channels/${channelId}/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ content: message })
+      });
+
+      if (response.ok) {
+        const newMessage = await response.json();
+        // Add the message to local state immediately for better UX
+        setMessages(prev => [...prev, newMessage]);
+        setMessage("");
+        setIsTyping(false);
+        console.log('Message sent via HTTP API');
+      } else {
+        console.error('Failed to send message:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
     }
   };
 
@@ -173,7 +199,8 @@ export default function ChatArea({ serverName, serverId, channelId }: ChatAreaPr
               placeholder={channelId ? `Message #${currentChannelName}` : "Select a channel to message"}
               className="flex-1 bg-transparent border-0 focus:ring-0 text-white placeholder-gray-400 px-3 py-3 text-sm"
               maxLength={2000}
-              disabled={!channelId || !isConnected}
+              disabled={!channelId}
+              autoFocus={!!channelId}
             />
 
             <div className="flex items-center mr-3 space-x-1">
@@ -182,7 +209,7 @@ export default function ChatArea({ serverName, serverId, channelId }: ChatAreaPr
                 variant="ghost"
                 size="icon"
                 className="text-gray-400 hover:text-white w-8 h-8 discord-button"
-                disabled={!channelId || !isConnected}
+                disabled={!channelId}
               >
                 <Paperclip className="w-5 h-5" />
               </Button>
@@ -191,7 +218,7 @@ export default function ChatArea({ serverName, serverId, channelId }: ChatAreaPr
                 variant="ghost"
                 size="icon"
                 className="text-gray-400 hover:text-white w-8 h-8 discord-button"
-                disabled={!channelId || !isConnected}
+                disabled={!channelId}
               >
                 <Gift className="w-5 h-5" />
               </Button>
@@ -200,7 +227,7 @@ export default function ChatArea({ serverName, serverId, channelId }: ChatAreaPr
                 variant="ghost"
                 size="icon"
                 className="text-gray-400 hover:text-white w-8 h-8 discord-button"
-                disabled={!channelId || !isConnected}
+                disabled={!channelId}
               >
                 <Sticker className="w-5 h-5" />
               </Button>
@@ -209,7 +236,7 @@ export default function ChatArea({ serverName, serverId, channelId }: ChatAreaPr
                 variant="ghost"
                 size="icon"
                 className="text-gray-400 hover:text-white w-8 h-8 discord-button"
-                disabled={!channelId || !isConnected}
+                disabled={!channelId}
               >
                 <Smile className="w-5 h-5" />
               </Button>
@@ -219,7 +246,7 @@ export default function ChatArea({ serverName, serverId, channelId }: ChatAreaPr
                   variant="ghost"
                   size="icon"
                   className="text-indigo-400 hover:text-indigo-300 w-8 h-8 discord-button"
-                  disabled={!channelId || !isConnected}
+                  disabled={!channelId}
                 >
                   <Send className="w-4 h-4" />
                 </Button>

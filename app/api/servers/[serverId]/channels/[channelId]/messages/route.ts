@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/db';
 import Server from '@/lib/models/Server';
-import Message from '@/lib/models/Message'; // Import the Message model
+import Message from '@/lib/models/Message';
+import User from '@/lib/models/User';
 import { verifyToken } from '@/lib/auth';
 import { isValidObjectId } from 'mongoose';
 
