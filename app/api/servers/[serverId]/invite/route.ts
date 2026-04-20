@@ -28,7 +28,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ ser
     // Await params here as the error suggests, even if unusual
     const awaitedParams = await Promise.resolve(params);
     const { serverId } = awaitedParams;
-    const { email } = await req.json();
+    let JSONBody;
+    try {
+      JSONBody = await req.json();
+    } catch (e) {
+      return new NextResponse("Invalid JSON", { status: 400 });
+    }
+    const email = JSONBody.email?.trim().toLowerCase();
 
     if (!email) {
       return new NextResponse("Email is required", { status: 400 });

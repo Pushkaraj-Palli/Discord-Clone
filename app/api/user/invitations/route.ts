@@ -24,12 +24,16 @@ export async function GET(req: NextRequest) {
       return new NextResponse("Unauthorized: User email not found in token", { status: 401 });
     }
 
-    const userEmail = session.email;
+    const userEmail = (session as any).email?.trim().toLowerCase();
     console.log('[DIAGNOSTIC] Fetching invitations for user email:', userEmail);
 
     const invitations = await Server.find({
-      "invitations.email": userEmail,
-      "invitations.status": "pending",
+      invitations: { 
+        $elemMatch: { 
+          email: userEmail, 
+          status: "pending" 
+        } 
+      }
     }, 'name invitations');
 
     console.log(`[DIAGNOSTIC] Found ${invitations.length} servers with potential matches`);

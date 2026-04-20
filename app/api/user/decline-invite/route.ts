@@ -37,7 +37,9 @@ export async function POST(req: NextRequest) {
     }
 
     const invitationIndex = server.invitations.findIndex(
-      (inv: any) => inv._id.toString() === invitationId && inv.status === 'pending' && inv.email === session.email
+      (inv: any) => inv._id.toString() === invitationId && 
+                    inv.status === 'pending' && 
+                    inv.email.trim().toLowerCase() === (session as any).email.trim().toLowerCase()
     );
 
     if (invitationIndex === -1) {
