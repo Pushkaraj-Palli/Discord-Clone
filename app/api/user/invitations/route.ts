@@ -25,25 +25,35 @@ export async function GET(req: NextRequest) {
     }
 
     const userEmail = session.email;
+    console.log('[DIAGNOSTIC] Fetching invitations for user email:', userEmail);
 
     const invitations = await Server.find({
       "invitations.email": userEmail,
       "invitations.status": "pending",
-    }, 'name invitations'); // Select name and invitations field
+    }, 'name invitations');
 
+    console.log(`[DIAGNOSTIC] Found ${invitations.length} servers with potential matches`);
+    
     const formattedInvitations = invitations.map(server => {
+      console.log(`[DIAGNOSTIC] processing server: ${server.name}`);
       const pendingForUser = server.invitations.filter(
-        (inv: any) => inv.email === userEmail && inv.status === 'pending'
+        (inv: any) => {
+          const emailMatch = inv.email === userEmail;
+          const statusMatch = inv.status === 'pending';
+          console.log(`  [DIAGNOSTIC] Checking inv: email=${inv.email} status=${inv.status} -> match=${emailMatch && statusMatch}`);
+          return emailMatch && statusMatch;
+        }
       );
       return pendingForUser.map((inv: any) => ({
         serverId: server._id,
         serverName: server.name,
         invitationId: inv._id,
-        invitedBy: inv.invitedBy, // You might want to populate this with user details later
+        invitedBy: inv.invitedBy,
         createdAt: inv.createdAt,
       }));
-    }).flat(); // Flatten the array of arrays
+    }).flat();
 
+    console.log('[DIAGNOSTIC] Final Invitation Count:', formattedInvitations.length);
     console.log('Formatted Invitations Sent to Client:', formattedInvitations);
 
     return NextResponse.json({ invitations: formattedInvitations }, { status: 200 });
