@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "build:render": "NODE_ENV=production next build",
+    "build:render": "cross-env NODE_ENV=production next build",
     "dev": "next dev",
     "start": "next start",
     "start:render": "cross-env NODE_ENV=production node --max-old-space-size=450 render-server.js",
