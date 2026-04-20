@@ -15,6 +15,8 @@ const loginSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     console.log('Login request received');
+    console.log('JWT_SECRET present:', !!process.env.JWT_SECRET);
+    console.log('NEXTAUTH_SECRET present:', !!process.env.NEXTAUTH_SECRET);
     
     let body;
     try {
@@ -132,10 +134,20 @@ export async function POST(request: NextRequest) {
     
     return response;
     
-  } catch (error) {
-    console.error("Login error:", error);
+  } catch (error: any) {
+    console.error("CRITICAL Login error:", error);
+    console.error("Stack trace:", error.stack);
+    
+    // Check for common initialization errors
+    if (error.message && error.message.includes("JWT Secret")) {
+      return NextResponse.json(
+        { error: "Server configuration error: Missing JWT Secret" },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
-      { error: "Something went wrong. Please try again later." },
+      { error: "Something went wrong. Please try again later.", details: process.env.NODE_ENV === 'development' ? error.message : undefined },
       { status: 500 }
     );
   }

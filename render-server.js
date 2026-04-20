@@ -110,9 +110,28 @@ const gracefulShutdown = (server, io) => {
   });
 };
 
+// Check critical environment variables
+const checkEnvVars = () => {
+  const required = ['MONGODB_URI', 'JWT_SECRET'];
+  const missing = required.filter(key => !process.env[key]);
+  
+  if (missing.length > 0) {
+    console.error('CRITICAL ERROR: Missing environment variables:', missing.join(', '));
+    console.error('Please set these in the Render dashboard.');
+    return false;
+  }
+  
+  console.log('Environment variables check PASSED');
+  console.log('JWT_SECRET starts with:', process.env.JWT_SECRET?.substring(0, 3) + '...');
+  return true;
+};
+
 // Main server initialization
 app.prepare().then(async () => {
   try {
+    if (!checkEnvVars()) {
+      // We don't exit here to allow Next.js to at least show a 500 error if hit
+    }
     // Connect to database
     await connectToDatabase();
     
