@@ -36,7 +36,7 @@ export default function ChatArea({ serverName, serverId, channelId }: ChatAreaPr
   const chatAreaRef = useRef<HTMLDivElement>(null);
 
   const onMessage = useCallback((newMessage: IMessage) => {
-    if (newMessage.channel.toString() === channelId) {
+    if (newMessage.channel && newMessage.channel.toString() === channelId) {
       setMessages((prevMessages) => [...prevMessages, newMessage]);
     }
   }, [channelId]);

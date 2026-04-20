@@ -21,7 +21,8 @@ export default function MessageList({ messages }: MessageListProps) {
     scrollToBottom()
   }, [messages])
 
-  const formatTime = (timestamp: string) => {
+  const formatTime = (timestamp?: string | Date) => {
+    if (!timestamp) return "";
     const date = new Date(timestamp)
     const now = new Date()
     const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60)
@@ -74,9 +75,18 @@ export default function MessageList({ messages }: MessageListProps) {
 
       <div className="px-4 py-4 space-y-1">
         {messages.map((message, index) => {
-          const showAvatar = index === 0 || messages[index - 1].sender.username !== message.sender.username
-          const timeDiff =
-            index > 0 ? new Date(message.timestamp).getTime() - new Date(messages[index - 1].timestamp).getTime() : 0
+          const sender = message.sender || { username: "Unknown User", avatarUrl: "" };
+          const prevSender = index > 0 ? messages[index - 1].sender : null;
+          
+          const showAvatar = index === 0 || !prevSender || prevSender.username !== sender.username;
+          
+          const messageDate = message.timestamp || (message as any).createdAt;
+          const prevMessageDate = index > 0 ? (messages[index - 1].timestamp || (messages[index - 1] as any).createdAt) : null;
+          
+          const timeDiff = (index > 0 && messageDate && prevMessageDate) 
+            ? new Date(messageDate).getTime() - new Date(prevMessageDate).getTime() 
+            : 0;
+            
           const showTimestamp = showAvatar || timeDiff > 5 * 60 * 1000 // 5 minutes
 
           return (
@@ -84,11 +94,11 @@ export default function MessageList({ messages }: MessageListProps) {
               {showAvatar ? (
                 <div className="flex items-start space-x-3">
                   <Avatar className="w-10 h-10 mt-0.5">
-                    {message.sender.avatarUrl ? (
-                      <AvatarImage src={message.sender.avatarUrl} alt={message.sender.username} />
+                    {sender.avatarUrl ? (
+                      <AvatarImage src={sender.avatarUrl} alt={sender.username} />
                     ) : (
                       <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
-                        {message.sender.username.charAt(0).toUpperCase()}
+                        {sender.username ? sender.username.charAt(0).toUpperCase() : "?"}
                       </AvatarFallback>
                     )}
                   </Avatar>
@@ -97,10 +107,10 @@ export default function MessageList({ messages }: MessageListProps) {
                       <span
                         className="font-medium text-sm hover:underline cursor-pointer"
                       >
-                        {message.sender.username}
+                        {sender.username}
                       </span>
                       <span className="text-xs text-gray-500 hover:text-gray-400 cursor-pointer">
-                        {formatTime(message.timestamp.toString())}
+                        {formatTime(messageDate)}
                       </span>
                     </div>
                     <div
@@ -114,7 +124,7 @@ export default function MessageList({ messages }: MessageListProps) {
                   <div className="w-10 flex justify-center">
                     {showTimestamp && (
                       <span className="text-xs text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {formatTime(message.timestamp.toString())}
+                        {formatTime(messageDate)}
                       </span>
                     )}
                   </div>

@@ -1,11 +1,13 @@
 import mongoose, { Schema, models, Document } from "mongoose";
 
 export interface IMessage extends Document {
-  sender: mongoose.Schema.Types.ObjectId;
-  channel: mongoose.Schema.Types.ObjectId;
-  server: mongoose.Schema.Types.ObjectId;
+  sender: any; // Can be ObjectId or populated User object
+  channel: mongoose.Schema.Types.ObjectId | string;
+  server: mongoose.Schema.Types.ObjectId | string;
   content: string;
   timestamp: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const MessageSchema: Schema = new Schema(
