@@ -4,7 +4,7 @@ import Server from '@/lib/models/Server';
 import { verifyToken } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 
-export async function POST(req: NextRequest, { params }: { params: { serverId: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ serverId: string }> }) {
   await connectToDatabase();
 
   try {

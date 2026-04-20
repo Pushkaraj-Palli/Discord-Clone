@@ -3,7 +3,7 @@ import connectToDatabase from '@/lib/db';
 import Server from '@/lib/models/Server';
 import { verifyToken } from '@/lib/auth';
 
-export async function GET(req: NextRequest, { params }: { params: { serverId: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ serverId: string }> }) {
   await connectToDatabase();
 
   try {

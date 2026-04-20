@@ -31,9 +31,9 @@ async function getServerDetails(serverId: string) {
   return res.json();
 }
 
-export default async function ServerPage({ params, searchParams }: { params: { serverId: string }, searchParams: { channelId?: string } }) {
-  const { serverId } = params;
-  const { channelId } = searchParams;
+export default async function ServerPage({ params, searchParams }: { params: Promise<{ serverId: string }>, searchParams: Promise<{ channelId?: string }> }) {
+  const { serverId } = await params;
+  const { channelId } = await searchParams;
 
   console.log("ServerPage - params:", params);
   console.log("ServerPage - serverId:", serverId);

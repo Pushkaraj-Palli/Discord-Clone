@@ -4,7 +4,7 @@ import Server from '@/lib/models/Server';
 import User from '@/lib/models/User';
 import connectToDatabase from '@/lib/db';
 
-export async function POST(req: NextRequest, { params }: { params: { serverId: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ serverId: string }> }) {
   try {
     await connectToDatabase();
     const authHeader = req.headers.get('authorization');
