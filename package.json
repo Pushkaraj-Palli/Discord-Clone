@@ -7,7 +7,7 @@
     "build:render": "NODE_ENV=production next build",
     "dev": "next dev",
     "start": "next start",
-    "start:render": "node render-server.js",
+    "start:render": "cross-env NODE_ENV=production node --max-old-space-size=450 render-server.js",
     "test:deployment": "node test-deployment.js",
     "test:fixes": "node test-fixes.js",
     "debug:build": "node debug-build.js",
@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
+    "cross-env": "^7.0.3",
     "@radix-ui/react-accordion": "1.2.2",
     "@radix-ui/react-alert-dialog": "1.1.4",
     "@radix-ui/react-aspect-ratio": "1.1.1",

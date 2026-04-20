@@ -259,7 +259,7 @@ app.prepare().then(async () => {
               content,
             });
 
-            const populatedMessage = await newMessage.populate('sender', 'username avatarUrl');
+            const populatedMessage = await newMessage.populate({ path: 'sender', model: User, select: 'username avatarUrl' });
             io.to(channelId).emit("message", populatedMessage);
             console.log(`Message sent to channel ${channelId} by ${user.username}: ${content}`);
           } catch (error) {
