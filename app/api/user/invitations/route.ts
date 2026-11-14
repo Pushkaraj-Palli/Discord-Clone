@@ -27,16 +27,14 @@ export async function GET(req: NextRequest) {
     const userEmail = (session as any).email?.trim().toLowerCase();
     console.log('[DIAGNOSTIC] Fetching invitations for user email:', userEmail);
 
+    const totalServers = await Server.countDocuments();
+    console.log(`[DIAGNOSTIC] TOTAL SERVERS IN DB: ${totalServers}`);
+
     const invitations = await Server.find({
-      invitations: { 
-        $elemMatch: { 
-          email: userEmail, 
-          status: "pending" 
-        } 
-      }
+      "invitations.email": userEmail
     }, 'name invitations');
 
-    console.log(`[DIAGNOSTIC] Found ${invitations.length} servers with potential matches`);
+    console.log(`[DIAGNOSTIC] Found ${invitations.length} servers having ANY invitation for this email (ignoring status)`);
     
     const formattedInvitations = invitations.map(server => {
       console.log(`[DIAGNOSTIC] processing server: ${server.name}`);

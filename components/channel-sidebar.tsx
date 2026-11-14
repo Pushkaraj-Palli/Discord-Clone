@@ -21,23 +21,30 @@ interface VoiceChannel {
 }
 
 interface ChannelSidebarProps {
-  serverId: string;
-  serverName: string;
-  textChannels: TextChannel[];
-  voiceChannels: VoiceChannel[];
+  serverId?: string;
+  serverName?: string;
+  textChannels?: TextChannel[];
+  voiceChannels?: VoiceChannel[];
   selectedChannelId?: string;
 }
 
-export default function ChannelSidebar({ serverId, serverName, textChannels, voiceChannels, selectedChannelId }: ChannelSidebarProps) {
+export default function ChannelSidebar({ serverId, serverName, textChannels = [], voiceChannels = [], selectedChannelId }: ChannelSidebarProps) {
   const [textExpanded, setTextExpanded] = useState(true)
   const [voiceExpanded, setVoiceExpanded] = useState(true)
   const [addChannelModalOpen, setAddChannelModalOpen] = useState(false)
   const [addUserModalOpen, setAddUserModalOpen] = useState(false)
   const [channelTypeToAdd, setChannelTypeToAdd] = useState<"text" | "voice" | null>(null);
+  const [serverRequiredFor, setServerRequiredFor] = useState<"text" | "voice" | null>(null);
+  const [inviteServerRequired, setInviteServerRequired] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const handleAddChannelClick = (type: "text" | "voice") => {
+    if (!serverId) {
+      setServerRequiredFor(type);
+      return;
+    }
+    setServerRequiredFor(null);
     setChannelTypeToAdd(type);
     setAddChannelModalOpen(true);
   };
@@ -60,7 +67,7 @@ export default function ChannelSidebar({ serverId, serverName, textChannels, voi
     <div className="flex-1 flex flex-col bg-gray-800">
       {/* Server Header */}
       <div className="h-12 px-4 flex items-center justify-between border-b border-gray-900/50 shadow-lg bg-gray-800 relative">
-        <h1 className="font-semibold text-white text-base">{serverName}</h1>
+        <h1 className="font-semibold text-white text-base">{serverName ?? "Home"}</h1>
         <div className="flex items-center space-x-1">
           <Button variant="ghost" size="icon" className="w-6 h-6 text-gray-400 hover:text-white">
             <Bell className="w-4 h-4" />
@@ -69,12 +76,24 @@ export default function ChannelSidebar({ serverId, serverName, textChannels, voi
             <Pin className="w-4 h-4" />
           </Button>
           <Dialog open={addUserModalOpen} onOpenChange={setAddUserModalOpen}>
-            <DialogTrigger asChild>
-              <Button variant="ghost" size="icon" className="w-6 h-6 text-gray-400 hover:text-white">
+            {serverId ? (
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="w-6 h-6 text-gray-400 hover:text-white">
+                  <UserPlus className="w-4 h-4" />
+                </Button>
+              </DialogTrigger>
+            ) : (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="w-6 h-6 text-gray-400 hover:text-white"
+                aria-label="Invite User to Server"
+                onClick={() => setInviteServerRequired(true)}
+              >
                 <UserPlus className="w-4 h-4" />
               </Button>
-            </DialogTrigger>
-            <AddUserModal isOpen={addUserModalOpen} onOpenChange={setAddUserModalOpen} serverId={serverId} />
+            )}
+            {serverId && <AddUserModal isOpen={addUserModalOpen} onOpenChange={setAddUserModalOpen} serverId={serverId} />}
           </Dialog>
           <Button variant="ghost" size="icon" className="w-6 h-6 text-gray-400 hover:text-white">
             <Settings className="w-4 h-4" />
@@ -84,6 +103,16 @@ export default function ChannelSidebar({ serverId, serverName, textChannels, voi
 
       {/* Channels */}
       <div className="flex-1 overflow-y-auto px-2 py-3">
+        {serverRequiredFor && (
+          <div role="alert" className="mb-3 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+            Create a server first to add a {serverRequiredFor} channel.
+          </div>
+        )}
+        {inviteServerRequired && (
+          <div role="alert" className="mb-3 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+            Create a server first to invite a user.
+          </div>
+        )}
         {/* Text Channels */}
         <div className="mb-6">
           <div

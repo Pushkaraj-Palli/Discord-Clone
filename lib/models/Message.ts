@@ -40,6 +40,9 @@ const MessageSchema: Schema = new Schema(
   { timestamps: true }
 );
 
+// Speed up channel history lookups and keep their ordering in the database.
+MessageSchema.index({ server: 1, channel: 1, timestamp: 1 });
+
 const Message = models.Message || mongoose.model<IMessage>("Message", MessageSchema);
 
 export default Message;

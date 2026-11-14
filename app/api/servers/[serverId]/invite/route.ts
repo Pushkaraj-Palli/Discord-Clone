@@ -71,7 +71,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ ser
       return new NextResponse("An invitation to this user already exists.", { status: 409 });
     }
 
+    const db = await connectToDatabase();
     console.log(`[DIAGNOSTIC] Sending invitation for server ${serverId} to email ${email}`);
+    if (db && db.connection) {
+      console.log(`[DIAGNOSTIC] Database: ${db.connection.name}, Collection: ${Server.collection.name}`);
+    }
     
     server.invitations.push({
       email,
