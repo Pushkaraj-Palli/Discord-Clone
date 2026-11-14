@@ -80,6 +80,37 @@ app.prepare().then(async () => {
         }
       );
 
+      socket.on("voice:join", async ({ serverId, channelId }: { serverId: string; channelId: string }) => {
+        try {
+          const voiceServer = await Server.findById(serverId);
+          const member = voiceServer?.members.some((id: any) => id.toString() === user._id.toString());
+          const channel = voiceServer?.voiceChannels.some((item: any) => item._id.toString() === channelId);
+          if (!member || !channel) return socket.emit("errorMessage", "You cannot join this voice channel.");
+          const room = `voice:${serverId}:${channelId}`;
+          const peers = Array.from(io.sockets.adapter.rooms.get(room) || []).filter(id => id !== socket.id);
+          socket.join(room);
+          socket.data.voiceRoom = room;
+          socket.to(room).emit("voice:peer-joined", { socketId: socket.id });
+          socket.emit("voice:peers", peers);
+        } catch {
+          socket.emit("errorMessage", "Could not join voice channel.");
+        }
+      });
+
+      socket.on("voice:leave", ({ serverId, channelId }: { serverId: string; channelId: string }) => {
+        const room = `voice:${serverId}:${channelId}`;
+        socket.to(room).emit("voice:peer-left", { socketId: socket.id });
+        socket.leave(room);
+        socket.data.voiceRoom = null;
+      });
+
+      socket.on("voice:signal", ({ targetSocketId, signal }: { targetSocketId: string; signal: unknown }) => {
+        const target = io.sockets.sockets.get(targetSocketId);
+        if (target && socket.data.voiceRoom && target.data.voiceRoom === socket.data.voiceRoom) {
+          target.emit("voice:signal", { socketId: socket.id, signal });
+        }
+      });
+
       socket.on(
         "sendMessage",
         async ({ serverId, channelId, content }: {
@@ -136,6 +167,7 @@ app.prepare().then(async () => {
       });
 
       socket.on("disconnect", async () => {
+        if (socket.data.voiceRoom) socket.to(socket.data.voiceRoom).emit("voice:peer-left", { socketId: socket.id });
         console.log(
           `User ${socket.data.user.username} (${socket.data.user.id}) disconnected`
         );

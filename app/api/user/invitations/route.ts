@@ -29,9 +29,9 @@ export async function GET(req: NextRequest) {
     const userEmail = user?.email?.trim().toLowerCase();
     if (!userEmail) return new NextResponse("User not found", { status: 404 });
 
-    const invitations = await Server.find({
-      invitations: { $elemMatch: { email: userEmail, status: 'pending' } },
-    }, 'name invitations');
+    // Compare normalized emails in application code so invitations created
+    // before email normalization still appear for their intended recipient.
+    const invitations = await Server.find({ 'invitations.status': 'pending' }, 'name invitations');
     
     const formattedInvitations = invitations.map(server => {
       const pendingForUser = server.invitations.filter(

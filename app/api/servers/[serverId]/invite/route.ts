@@ -53,13 +53,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ ser
     }
 
     // Check if the inviting user is a member of the server
-    if (!server.members.includes(session.id)) {
+    if (!server.members.some((member: any) => member.toString() === String(session.id))) {
       return new NextResponse("You are not a member of this server.", { status: 403 });
     }
 
     // Check if the user is already a member
     const invitedUser = await User.findOne({ email });
-    if (invitedUser && server.members.includes(invitedUser._id)) {
+    if (invitedUser && server.members.some((member: any) => member.toString() === invitedUser._id.toString())) {
       return new NextResponse("User is already a member of this server.", { status: 409 });
     }
 
@@ -68,7 +68,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ ser
       (inv: any) => inv.email === email && inv.status === 'pending'
     );
     if (existingInvitation) {
-      return new NextResponse("An invitation to this user already exists.", { status: 409 });
+      // Refresh the stored address to its normalized form so legacy mixed-case
+      // invitations can be found by the recipient's account email.
+      existingInvitation.email = email;
+      existingInvitation.invitedBy = session.id as any;
+      await server.save();
+      return NextResponse.json({ message: "Invitation is already pending for this user." }, { status: 200 });
     }
 
     server.invitations.push({

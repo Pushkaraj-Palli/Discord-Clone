@@ -4,7 +4,7 @@ const { Server: SocketIOServer } = require('socket.io');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-require('dotenv').config();
+require('dotenv').config({ path: process.env.NODE_ENV === 'production' ? '.env' : '.env.local' });
 
 // Initialize Express app
 const app = express();
@@ -132,6 +132,37 @@ io.on('connection', async (socket) => {
       socket.join(channelId); // Join a room for the channel
     });
 
+    socket.on('voice:join', async ({ serverId, channelId }) => {
+      try {
+        const server = await Server.findById(serverId);
+        const isMember = server?.members.some(member => member.toString() === user._id.toString());
+        const isVoiceChannel = server?.voiceChannels.some(channel => channel._id.toString() === channelId);
+        if (!isMember || !isVoiceChannel) return socket.emit('errorMessage', 'You cannot join this voice channel.');
+        const room = `voice:${serverId}:${channelId}`;
+        const peers = Array.from(io.sockets.adapter.rooms.get(room) || []).filter(id => id !== socket.id);
+        socket.join(room);
+        socket.data.voiceRoom = room;
+        socket.to(room).emit('voice:peer-joined', { socketId: socket.id });
+        socket.emit('voice:peers', peers);
+      } catch (error) {
+        socket.emit('errorMessage', 'Could not join voice channel.');
+      }
+    });
+
+    socket.on('voice:leave', ({ serverId, channelId }) => {
+      const room = `voice:${serverId}:${channelId}`;
+      socket.to(room).emit('voice:peer-left', { socketId: socket.id });
+      socket.leave(room);
+      socket.data.voiceRoom = null;
+    });
+
+    socket.on('voice:signal', ({ targetSocketId, signal }) => {
+      const target = io.sockets.sockets.get(targetSocketId);
+      if (target && socket.data.voiceRoom && target.data.voiceRoom === socket.data.voiceRoom) {
+        target.emit('voice:signal', { socketId: socket.id, signal });
+      }
+    });
+
     socket.on('sendMessage', async ({ serverId, channelId, content }) => {
       if (!content || content.trim() === '') {
         socket.emit('errorMessage', 'Message content cannot be empty.');
@@ -180,6 +211,7 @@ io.on('connection', async (socket) => {
     });
 
     socket.on('disconnect', async () => {
+      if (socket.data.voiceRoom) socket.to(socket.data.voiceRoom).emit('voice:peer-left', { socketId: socket.id });
       console.log(`User ${socket.data.user.username} (${socket.data.user.id}) disconnected`);
       // Optional: Update user status to offline if no other connections
       const remainingConnections = Array.from(io.sockets.sockets.values()).filter(

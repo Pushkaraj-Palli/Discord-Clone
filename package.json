@@ -6,6 +6,7 @@
     "build": "next build",
     "build:render": "cross-env NODE_ENV=production next build",
     "dev": "next dev",
+    "dev:socket": "node socket-server/index.js",
     "start": "next start",
     "start:render": "cross-env NODE_ENV=production node --max-old-space-size=450 render-server.js",
     "lint": "next lint"

@@ -33,6 +33,13 @@ const messageSchema = new mongoose.Schema({
   content: { type: String, required: true, maxLength: 2000 },
 }, { timestamps: true });
 
+const invitationSchema = new mongoose.Schema({
+  email: { type: String, required: true, trim: true, lowercase: true },
+  status: { type: String, enum: ['pending', 'accepted', 'declined'], default: 'pending' },
+  invitedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  createdAt: { type: Date, default: Date.now },
+});
+
 const serverSchema = new mongoose.Schema({
   name: { type: String, required: true },
   description: { type: String },
@@ -48,6 +55,7 @@ const serverSchema = new mongoose.Schema({
     _id: { type: mongoose.Schema.Types.ObjectId, auto: true },
     name: { type: String, required: true },
   }],
+  invitations: { type: [invitationSchema], default: [] },
 }, { timestamps: true });
 
 const User = mongoose.model('User', userSchema);
@@ -240,6 +248,37 @@ app.prepare().then(async () => {
           socket.join(channelId);
         });
 
+        socket.on('voice:join', async ({ serverId, channelId }) => {
+          try {
+            const server = await Server.findById(serverId);
+            const isMember = server?.members.some((member) => member.toString() === user._id.toString());
+            const isVoiceChannel = server?.voiceChannels.some((channel) => channel._id.toString() === channelId);
+            if (!isMember || !isVoiceChannel) return socket.emit('errorMessage', 'You cannot join this voice channel.');
+            const room = `voice:${serverId}:${channelId}`;
+            const peers = Array.from(io.sockets.adapter.rooms.get(room) || []).filter((id) => id !== socket.id);
+            socket.join(room);
+            socket.data.voiceRoom = room;
+            socket.to(room).emit('voice:peer-joined', { socketId: socket.id });
+            socket.emit('voice:peers', peers);
+          } catch (error) {
+            socket.emit('errorMessage', 'Could not join voice channel.');
+          }
+        });
+
+        socket.on('voice:leave', ({ serverId, channelId }) => {
+          const room = `voice:${serverId}:${channelId}`;
+          socket.to(room).emit('voice:peer-left', { socketId: socket.id });
+          socket.leave(room);
+          socket.data.voiceRoom = null;
+        });
+
+        socket.on('voice:signal', ({ targetSocketId, signal }) => {
+          const target = io.sockets.sockets.get(targetSocketId);
+          if (target && socket.data.voiceRoom && target.data.voiceRoom === socket.data.voiceRoom) {
+            target.emit('voice:signal', { socketId: socket.id, signal });
+          }
+        });
+
         // Handle message sending
         socket.on("sendMessage", async ({ serverId, channelId, content }) => {
           if (!content || content.trim() === "") {
@@ -289,6 +328,7 @@ app.prepare().then(async () => {
 
         // Handle disconnection
         socket.on("disconnect", async () => {
+          if (socket.data.voiceRoom) socket.to(socket.data.voiceRoom).emit('voice:peer-left', { socketId: socket.id });
           console.log(`User ${socket.data.user.username} (${socket.data.user.id}) disconnected`);
           
           // Update user status to offline if no other connections

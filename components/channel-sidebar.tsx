@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogTrigger } from "@/components/ui/dialog"
 import AddChannelModal from "./add-channel-modal"
 import AddUserModal from "./add-user-modal"
+import VoiceChannel from "./voice-channel"
 import { useRouter, useSearchParams } from 'next/navigation';
 
 interface TextChannel {
@@ -36,6 +37,7 @@ export default function ChannelSidebar({ serverId, serverName, textChannels = []
   const [channelTypeToAdd, setChannelTypeToAdd] = useState<"text" | "voice" | null>(null);
   const [serverRequiredFor, setServerRequiredFor] = useState<"text" | "voice" | null>(null);
   const [inviteServerRequired, setInviteServerRequired] = useState(false);
+  const [activeVoiceChannel, setActiveVoiceChannel] = useState<VoiceChannel | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -139,22 +141,15 @@ export default function ChannelSidebar({ serverId, serverName, textChannels = []
           {textExpanded && (
             <div className="mt-1 space-y-0.5">
               {(textChannels || []).map((channel) => (
-                <Button
-                  key={channel._id || channel.name} // Use _id if available, fallback to name
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleChannelClick(channel._id)}
-                  className={`w-full justify-start px-2 py-1.5 h-auto text-gray-400 hover:text-gray-300 hover:bg-gray-700/50 rounded channel-item group ${selectedChannelId === channel._id ? "bg-gray-700/60 text-white active" : ""}`}
-                >
-                  <Hash className="w-4 h-4 mr-2 flex-shrink-0" />
-                  <span className="truncate">{channel.name}</span>
-                  {false && <div className="ml-auto w-2 h-2 bg-red-500 rounded-full flex-shrink-0" />}
-                  <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center space-x-1">
-                    <button type="button" aria-label={`Invite user to ${channel.name}`} title="Invite user" className="hover:text-white" onClick={(event) => { event.stopPropagation(); setAddUserModalOpen(true); }}>
-                      <UserPlus className="w-4 h-4" />
-                    </button>
-                  </div>
-                </Button>
+                <div key={channel._id || channel.name} className={`flex items-center rounded channel-item group ${selectedChannelId === channel._id ? "bg-gray-700/60 active" : ""}`}>
+                  <Button variant="ghost" size="sm" onClick={() => handleChannelClick(channel._id)} className="min-w-0 flex-1 justify-start px-2 py-1.5 h-auto text-gray-400 hover:text-gray-300 hover:bg-gray-700/50">
+                    <Hash className="w-4 h-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">{channel.name}</span>
+                  </Button>
+                  <Button type="button" variant="ghost" size="icon" aria-label={`Invite user to ${channel.name}`} title="Invite user" className="mr-1 h-7 w-7 shrink-0 text-gray-400 opacity-0 group-hover:opacity-100 hover:text-white" onClick={() => setAddUserModalOpen(true)}>
+                    <UserPlus className="h-4 w-4" />
+                  </Button>
+                </div>
               ))}
             </div>
           )}
@@ -187,12 +182,8 @@ export default function ChannelSidebar({ serverId, serverName, textChannels = []
             <div className="mt-1 space-y-0.5">
               {(voiceChannels || []).map((channel) => (
                 <div key={channel._id || channel.name} className="space-y-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleChannelClick(channel._id)}
-                    className={`w-full justify-start px-2 py-1.5 h-auto text-gray-400 hover:text-gray-300 hover:bg-gray-700/50 rounded channel-item group ${selectedChannelId === channel._id ? "bg-gray-700/60 text-white active" : ""}`}
-                  >
+                  <div className={`flex items-center rounded channel-item group ${activeVoiceChannel?._id === channel._id ? "bg-gray-700/60 active" : ""}`}>
+                    <Button variant="ghost" size="sm" onClick={() => setActiveVoiceChannel(channel)} className="min-w-0 flex-1 justify-start px-2 py-1.5 h-auto text-gray-400 hover:text-gray-300 hover:bg-gray-700/50">
                     <Volume2 className="w-4 h-4 mr-2 flex-shrink-0" />
                     <span className="truncate flex-1">{channel.name}</span>
                     <div className="flex items-center space-x-1 text-xs">
@@ -206,10 +197,11 @@ export default function ChannelSidebar({ serverId, serverName, textChannels = []
                         </>
                       )}
                     </div>
-                    <button type="button" aria-label={`Invite user to ${channel.name}`} title="Invite user" className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:text-white" onClick={(event) => { event.stopPropagation(); setAddUserModalOpen(true); }}>
-                      <UserPlus className="w-4 h-4" />
-                    </button>
-                  </Button>
+                    </Button>
+                    <Button type="button" variant="ghost" size="icon" aria-label={`Invite user to ${channel.name}`} title="Invite user" className="mr-1 h-7 w-7 shrink-0 text-gray-400 opacity-0 group-hover:opacity-100 hover:text-white" onClick={() => setAddUserModalOpen(true)}>
+                      <UserPlus className="h-4 w-4" />
+                    </Button>
+                  </div>
 
                   {/* Connected Users */}
                   {channel.users && channel.users > 0 && (
@@ -231,6 +223,14 @@ export default function ChannelSidebar({ serverId, serverName, textChannels = []
           )}
         </div>
       </div>
+      {serverId && activeVoiceChannel && (
+        <VoiceChannel
+          key={`${serverId}:${activeVoiceChannel._id}`}
+          serverId={serverId}
+          channelId={activeVoiceChannel._id}
+          channelName={activeVoiceChannel.name}
+        />
+      )}
       <Dialog open={addChannelModalOpen} onOpenChange={setAddChannelModalOpen}>
         <AddChannelModal 
           isOpen={addChannelModalOpen} 

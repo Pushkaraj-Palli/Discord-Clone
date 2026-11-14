@@ -29,10 +29,11 @@ export const useSocket = (options?: UseSocketOptions) => {
     // Connect to the Socket.IO server
     // For Render deployment, use same-origin connection (empty URL)
     // For local development, use explicit URL if provided
-    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || '';
+    const isLocalDev = process.env.NODE_ENV === 'development';
+    const socketUrl = isLocalDev ? 'http://localhost:3001' : (process.env.NEXT_PUBLIC_SOCKET_URL || '');
     
     const newSocket = io(socketUrl, {
-      path: '/api/socket.io',
+      path: isLocalDev ? '/socket.io' : '/api/socket.io',
       auth: {
         token,
       },
@@ -93,11 +94,26 @@ export const useSocket = (options?: UseSocketOptions) => {
     }
   }, [socket, isConnected]);
 
+  const joinVoiceChannel = useCallback((serverId: string, channelId: string) => {
+    if (socket && isConnected) socket.emit('voice:join', { serverId, channelId });
+  }, [socket, isConnected]);
+
+  const leaveVoiceChannel = useCallback((serverId: string, channelId: string) => {
+    if (socket && isConnected) socket.emit('voice:leave', { serverId, channelId });
+  }, [socket, isConnected]);
+
+  const sendVoiceSignal = useCallback((targetSocketId: string, signal: unknown) => {
+    socket?.emit('voice:signal', { targetSocketId, signal });
+  }, [socket]);
+
   return {
     socket,
     isConnected,
     error,
     joinChannel,
     sendMessage,
+    joinVoiceChannel,
+    leaveVoiceChannel,
+    sendVoiceSignal,
   };
 };

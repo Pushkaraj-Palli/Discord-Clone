@@ -29,8 +29,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ ser
       return NextResponse.json({ message: 'Server not found' }, { status: 404 });
     }
 
-    if (server.owner.toString() !== decoded.id) {
-      return NextResponse.json({ message: 'Forbidden: Only server owner can add channels' }, { status: 403 });
+    const isMember = server.members.some((member: any) => member.toString() === String(decoded.id));
+    if (!isMember) {
+      return NextResponse.json({ message: 'Forbidden: Only server members can add channels' }, { status: 403 });
     }
 
     if (type === 'text') {
