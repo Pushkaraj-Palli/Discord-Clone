@@ -149,17 +149,17 @@ export default function ChatArea({ serverName, serverId, channelId }: ChatAreaPr
   const currentChannelName = serverName; // Fallback, will be replaced with actual channel name
 
   return (
-    <div className="flex flex-col h-full bg-gray-750">
+    <div className="flex min-w-0 flex-col h-full bg-gray-750">
       {/* Chat Header */}
-      <div className="h-12 px-4 flex items-center justify-between border-b border-gray-900/50 shadow-lg bg-gray-800 relative">
-        <div className="flex items-center">
-          <Hash className="w-5 h-5 text-gray-400 mr-2" />
-          <span className="font-semibold text-white text-base">{serverName} - {currentChannelName}</span>
-          <div className="ml-2 h-4 w-px bg-gray-600" />
-          <span className="ml-2 text-sm text-gray-400">General discussion for everyone</span>
+      <div className="h-11 shrink-0 px-2 sm:h-12 sm:px-4 flex items-center justify-between border-b border-gray-900/50 shadow-lg bg-gray-800 relative">
+        <div className="flex min-w-0 items-center">
+          <Hash className="h-4 w-4 shrink-0 text-gray-400 mr-2" />
+          <span className="truncate font-semibold text-white text-sm sm:text-base">{currentChannelName}</span>
+          <div className="ml-2 h-4 w-px shrink-0 bg-gray-600 hidden sm:block" />
+          <span className="ml-2 truncate text-sm text-gray-400 hidden sm:block">General discussion for everyone</span>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="hidden sm:flex items-center space-x-2">
           <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white hover:bg-gray-700 w-8 h-8">
             <Users className="w-5 h-5" />
           </Button>
@@ -181,14 +181,14 @@ export default function ChatArea({ serverName, serverId, channelId }: ChatAreaPr
       </ScrollArea>
 
       {/* Message Input */}
-      <div className="p-4 bg-gray-750">
+      <div className="shrink-0 p-2 sm:p-4 bg-gray-750">
         <form onSubmit={handleSendMessage} className="relative">
           <div className="flex items-center bg-gray-700 rounded-lg border border-gray-600 focus-within:border-gray-500 transition-colors duration-200">
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className="ml-3 text-gray-400 hover:text-white w-8 h-8 discord-button"
+              className="hidden sm:inline-flex ml-3 text-gray-400 hover:text-white w-8 h-8 discord-button"
             >
               <Plus className="w-5 h-5" />
             </Button>
@@ -203,12 +203,12 @@ export default function ChatArea({ serverName, serverId, channelId }: ChatAreaPr
               autoFocus={!!channelId}
             />
 
-            <div className="flex items-center mr-3 space-x-1">
+            <div className="flex items-center mr-1 sm:mr-3 sm:space-x-1">
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="text-gray-400 hover:text-white w-8 h-8 discord-button"
+                className="hidden sm:inline-flex text-gray-400 hover:text-white w-8 h-8 discord-button"
                 disabled={!channelId}
               >
                 <Paperclip className="w-5 h-5" />
@@ -217,7 +217,7 @@ export default function ChatArea({ serverName, serverId, channelId }: ChatAreaPr
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="text-gray-400 hover:text-white w-8 h-8 discord-button"
+                className="hidden md:inline-flex text-gray-400 hover:text-white w-8 h-8 discord-button"
                 disabled={!channelId}
               >
                 <Gift className="w-5 h-5" />
@@ -226,7 +226,7 @@ export default function ChatArea({ serverName, serverId, channelId }: ChatAreaPr
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="text-gray-400 hover:text-white w-8 h-8 discord-button"
+                className="hidden md:inline-flex text-gray-400 hover:text-white w-8 h-8 discord-button"
                 disabled={!channelId}
               >
                 <Sticker className="w-5 h-5" />
@@ -235,7 +235,7 @@ export default function ChatArea({ serverName, serverId, channelId }: ChatAreaPr
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="text-gray-400 hover:text-white w-8 h-8 discord-button"
+                className="hidden sm:inline-flex text-gray-400 hover:text-white w-8 h-8 discord-button"
                 disabled={!channelId}
               >
                 <Smile className="w-5 h-5" />

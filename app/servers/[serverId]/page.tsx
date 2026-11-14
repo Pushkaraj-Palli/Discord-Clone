@@ -57,7 +57,7 @@ export default async function ServerPage({ params, searchParams }: { params: Pro
 
       {/* Channel Sidebar */}
       <div className="flex min-h-0 flex-1">
-        <div className="flex w-[38%] min-w-[132px] max-w-[240px] flex-col bg-gray-800 md:w-60 md:min-w-0 md:max-w-none">
+        <div className="flex w-[30%] min-w-[108px] max-w-[210px] flex-col bg-gray-800 md:w-60 md:min-w-0 md:max-w-none">
           <Suspense fallback={<LoadingSpinner />}>
             <ChannelSidebar serverId={serverId} serverName={server.name} textChannels={server.textChannels} voiceChannels={server.voiceChannels} selectedChannelId={channelId} />
           </Suspense>
