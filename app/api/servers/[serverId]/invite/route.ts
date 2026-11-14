@@ -71,21 +71,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ ser
       return new NextResponse("An invitation to this user already exists.", { status: 409 });
     }
 
-    const db = await connectToDatabase();
-    console.log(`[DIAGNOSTIC] Sending invitation for server ${serverId} to email ${email}`);
-    if (db && db.connection) {
-      console.log(`[DIAGNOSTIC] Database: ${db.connection.name}, Collection: ${Server.collection.name}`);
-    }
-    
     server.invitations.push({
       email,
       invitedBy: session.id,
       status: 'pending',
     });
-    const savedServer = await server.save();
-    console.log(`[DIAGNOSTIC] Invitation saved. Current pending invitations for this server:`, 
-      savedServer.invitations.filter((i: any) => i.status === 'pending').map((i: any) => i.email)
-    );
+    await server.save();
 
     return NextResponse.json({ message: "Invitation sent successfully" }, { status: 200 });
   } catch (error) {

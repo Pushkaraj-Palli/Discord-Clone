@@ -150,8 +150,9 @@ export default function ChannelSidebar({ serverId, serverName, textChannels = []
                   <span className="truncate">{channel.name}</span>
                   {false && <div className="ml-auto w-2 h-2 bg-red-500 rounded-full flex-shrink-0" />}
                   <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center space-x-1">
-                    <UserPlus className="w-4 h-4" />
-                    <Settings className="w-4 h-4" />
+                    <button type="button" aria-label={`Invite user to ${channel.name}`} title="Invite user" className="hover:text-white" onClick={(event) => { event.stopPropagation(); setAddUserModalOpen(true); }}>
+                      <UserPlus className="w-4 h-4" />
+                    </button>
                   </div>
                 </Button>
               ))}
@@ -205,10 +206,9 @@ export default function ChannelSidebar({ serverId, serverName, textChannels = []
                         </>
                       )}
                     </div>
-                    <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center space-x-1">
+                    <button type="button" aria-label={`Invite user to ${channel.name}`} title="Invite user" className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:text-white" onClick={(event) => { event.stopPropagation(); setAddUserModalOpen(true); }}>
                       <UserPlus className="w-4 h-4" />
-                      <Settings className="w-4 h-4" />
-                    </div>
+                    </button>
                   </Button>
 
                   {/* Connected Users */}

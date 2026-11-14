@@ -11,7 +11,7 @@ import { useToast } from "@/components/ui/use-toast"
 interface AddServerModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onServerAdded: () => void;
+  onServerAdded: (serverId: string) => void;
 }
 
 export default function AddServerModal({ isOpen, onOpenChange, onServerAdded }: AddServerModalProps) {
@@ -34,13 +34,14 @@ export default function AddServerModal({ isOpen, onOpenChange, onServerAdded }: 
       });
 
       if (response.ok) {
+        const createdServer = await response.json();
         toast({
           title: "Server Created!",
           description: `'${serverName}' has been successfully created.`, 
         });
         setServerName("");
         setServerIcon("");
-        onServerAdded();
+        onServerAdded(createdServer._id);
         onOpenChange(false); 
       } else {
         const errorData = await response.json();

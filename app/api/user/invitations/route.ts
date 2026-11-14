@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import Server from '@/lib/models/Server';
+import User from '@/lib/models/User';
 import connectToDatabase from '@/lib/db';
 
 export async function GET(req: NextRequest) {
@@ -20,31 +21,21 @@ export async function GET(req: NextRequest) {
       return new NextResponse("Unauthorized: Invalid token", { status: 401 });
     }
 
-    if (!session?.email) {
-      return new NextResponse("Unauthorized: User email not found in token", { status: 401 });
+    if (!session?.id) {
+      return new NextResponse("Unauthorized: User ID not found in token", { status: 401 });
     }
 
-    const userEmail = (session as any).email?.trim().toLowerCase();
-    console.log('[DIAGNOSTIC] Fetching invitations for user email:', userEmail);
-
-    const totalServers = await Server.countDocuments();
-    console.log(`[DIAGNOSTIC] TOTAL SERVERS IN DB: ${totalServers}`);
+    const user = await User.findById(session.id).select('email');
+    const userEmail = user?.email?.trim().toLowerCase();
+    if (!userEmail) return new NextResponse("User not found", { status: 404 });
 
     const invitations = await Server.find({
-      "invitations.email": userEmail
+      invitations: { $elemMatch: { email: userEmail, status: 'pending' } },
     }, 'name invitations');
-
-    console.log(`[DIAGNOSTIC] Found ${invitations.length} servers having ANY invitation for this email (ignoring status)`);
     
     const formattedInvitations = invitations.map(server => {
-      console.log(`[DIAGNOSTIC] processing server: ${server.name}`);
       const pendingForUser = server.invitations.filter(
-        (inv: any) => {
-          const emailMatch = inv.email === userEmail;
-          const statusMatch = inv.status === 'pending';
-          console.log(`  [DIAGNOSTIC] Checking inv: email=${inv.email} status=${inv.status} -> match=${emailMatch && statusMatch}`);
-          return emailMatch && statusMatch;
-        }
+        (inv: any) => inv.email?.trim().toLowerCase() === userEmail && inv.status === 'pending'
       );
       return pendingForUser.map((inv: any) => ({
         serverId: server._id,
@@ -54,9 +45,6 @@ export async function GET(req: NextRequest) {
         createdAt: inv.createdAt,
       }));
     }).flat();
-
-    console.log('[DIAGNOSTIC] Final Invitation Count:', formattedInvitations.length);
-    console.log('Formatted Invitations Sent to Client:', formattedInvitations);
 
     return NextResponse.json({ invitations: formattedInvitations }, { status: 200 });
   } catch (error) {

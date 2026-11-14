@@ -59,8 +59,9 @@ export default function ServerList() {
     fetchServers();
   }, []);
 
-  const handleServerAdded = () => {
+  const handleServerAdded = (serverId: string) => {
     fetchServers();
+    router.push(`/servers/${serverId}`);
   };
 
   // const handleDeleteClick = (serverId: string) => {
