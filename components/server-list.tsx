@@ -106,7 +106,7 @@ export default function ServerList() {
   // };
 
   return (
-    <div className="flex flex-col items-center py-3 space-y-2 bg-gray-900">
+    <div className="flex h-full flex-row items-center gap-2 overflow-x-auto px-2 py-1 md:flex-col md:justify-start md:gap-2 md:overflow-x-visible md:overflow-y-auto md:px-0 md:py-3">
       {/* Server List */}
       {servers.map((server) => (
         <div key={server._id} className="relative group">

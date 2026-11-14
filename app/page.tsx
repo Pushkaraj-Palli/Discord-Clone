@@ -22,27 +22,23 @@ export default function HomePage() {
   }, [router])
 
   return (
-    <div className="flex h-screen bg-gray-800">
+    <div className="flex h-[100dvh] flex-col overflow-hidden bg-gray-800 md:flex-row">
       {/* Server List */}
-      <div className="w-[72px] bg-gray-900 flex flex-col">
+      <div className="h-14 w-full shrink-0 bg-gray-900 md:h-auto md:w-[72px]">
         <Suspense fallback={<LoadingSpinner />}>
           <ServerList />
         </Suspense>
       </div>
 
       {/* Channel Sidebar */}
-      <div className="w-60 bg-gray-800 flex flex-col">
-        <Suspense fallback={<LoadingSpinner />}>
-          <ChannelSidebar />
-        </Suspense>
-        <UserPanel />
-      </div>
-
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
-        <Suspense fallback={<LoadingSpinner />}>
-          <ChatArea />
-        </Suspense>
+      <div className="flex min-h-0 flex-1">
+        <div className="flex w-[38%] min-w-[132px] max-w-[240px] flex-col bg-gray-800 md:w-60 md:min-w-0 md:max-w-none">
+          <Suspense fallback={<LoadingSpinner />}><ChannelSidebar /></Suspense>
+          <UserPanel />
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <Suspense fallback={<LoadingSpinner />}><ChatArea /></Suspense>
+        </div>
       </div>
 
       {/* User List - Hidden on mobile */}
